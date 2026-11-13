@@ -10,9 +10,17 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-    .status-Good { background-color: #dcfce7 !important; color: #166534 !important; border-color: #86efac !important; font-weight: 700; }
-    .status-Pending { background-color: #fef9c3 !important; color: #854d0e !important; border-color: #fde047 !important; font-weight: 700; }
-    .status-Issue { background-color: #fee2e2 !important; color: #991b1b !important; border-color: #fca5a5 !important; font-weight: 700; }
+
+    /* 1-Tap Pill Button Active States */
+    .pill-btn { transition: all 0.15s ease; user-select: none; -webkit-tap-highlight-color: transparent; }
+    .pill-Good-active { background-color: #16a34a !important; color: #ffffff !important; border-color: #15803d !important; box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3); }
+    .pill-Pending-active { background-color: #d97706 !important; color: #ffffff !important; border-color: #b45309 !important; box-shadow: 0 2px 6px rgba(217, 119, 6, 0.3); }
+    .pill-Issue-active { background-color: #dc2626 !important; color: #ffffff !important; border-color: #b91c1c !important; box-shadow: 0 2px 6px rgba(220, 38, 38, 0.3); }
+
+    /* Card Left Border Accent */
+    .row-card-Good { border-left: 4px solid #22c55e !important; background-color: #f0fdf4/40; }
+    .row-card-Pending { border-left: 4px solid #f59e0b !important; background-color: #fffbeb; }
+    .row-card-Issue { border-left: 4px solid #ef4444 !important; background-color: #fef2f2; }
   </style>
 </head>
 <body class="bg-[#0b2210] min-h-screen font-sans text-slate-800 flex items-center justify-center relative overflow-x-hidden">
@@ -113,14 +121,34 @@
             </button>
 
             <div id="sidebarCategoryList" class="mt-1.5 ml-2 pl-2.5 border-l border-emerald-700/60 space-y-1">
-              <button type="button" onclick="openCatTab(1)" id="sideTab1" class="side-cat-btn w-full text-left px-3 py-2 rounded-lg text-[11px] font-bold bg-emerald-800/70 text-white transition">1. General & Forecast</button>
-              <button type="button" onclick="openCatTab(2)" id="sideTab2" class="side-cat-btn w-full text-left px-3 py-2 rounded-lg text-[11px] font-medium text-emerald-100/75 hover:bg-[#17431f]/50 hover:text-white transition">2. Public Area (23)</button>
-              <button type="button" onclick="openCatTab(3)" id="sideTab3" class="side-cat-btn w-full text-left px-3 py-2 rounded-lg text-[11px] font-medium text-emerald-100/75 hover:bg-[#17431f]/50 hover:text-white transition">3. BOH & Lobby (33)</button>
-              <button type="button" onclick="openCatTab(4)" id="sideTab4" class="side-cat-btn w-full text-left px-3 py-2 rounded-lg text-[11px] font-medium text-emerald-100/75 hover:bg-[#17431f]/50 hover:text-white transition">4. Restaurant (16)</button>
-              <button type="button" onclick="openCatTab(5)" id="sideTab5" class="side-cat-btn w-full text-left px-3 py-2 rounded-lg text-[11px] font-medium text-emerald-100/75 hover:bg-[#17431f]/50 hover:text-white transition">5. Villa Checklist (81)</button>
-              <button type="button" onclick="openCatTab(6)" id="sideTab6" class="side-cat-btn w-full text-left px-3 py-2 rounded-lg text-[11px] font-medium text-emerald-100/75 hover:bg-[#17431f]/50 hover:text-white transition">6. Guest / F&B</button>
-              <button type="button" onclick="openCatTab(7)" id="sideTab7" class="side-cat-btn w-full text-left px-3 py-2 rounded-lg text-[11px] font-medium text-emerald-100/75 hover:bg-[#17431f]/50 hover:text-white transition">7. Operational</button>
-              <button type="button" onclick="openCatTab(8)" id="sideTab8" class="side-cat-btn w-full text-left px-3 py-2 rounded-lg text-[11px] font-medium text-emerald-100/75 hover:bg-[#17431f]/50 hover:text-white transition">8. Staff in Charge</button>
+              <button type="button" onclick="openCatTab(1)" id="sideTab1" class="side-cat-btn w-full flex items-center justify-between px-3 py-2 rounded-lg text-[11px] font-bold bg-emerald-800/70 text-white transition">
+                <span>1. General & Forecast</span>
+              </button>
+              <button type="button" onclick="openCatTab(2)" id="sideTab2" class="side-cat-btn w-full flex items-center justify-between px-3 py-2 rounded-lg text-[11px] font-medium text-emerald-100/75 hover:bg-[#17431f]/50 hover:text-white transition">
+                <span>2. Public Area</span>
+                <span id="sideProg_pa" class="text-[10px] bg-black/30 px-1.5 py-0.5 rounded font-bold">0/23</span>
+              </button>
+              <button type="button" onclick="openCatTab(3)" id="sideTab3" class="side-cat-btn w-full flex items-center justify-between px-3 py-2 rounded-lg text-[11px] font-medium text-emerald-100/75 hover:bg-[#17431f]/50 hover:text-white transition">
+                <span>3. BOH & Lobby</span>
+                <span id="sideProg_boh" class="text-[10px] bg-black/30 px-1.5 py-0.5 rounded font-bold">0/33</span>
+              </button>
+              <button type="button" onclick="openCatTab(4)" id="sideTab4" class="side-cat-btn w-full flex items-center justify-between px-3 py-2 rounded-lg text-[11px] font-medium text-emerald-100/75 hover:bg-[#17431f]/50 hover:text-white transition">
+                <span>4. Restaurant</span>
+                <span id="sideProg_rest" class="text-[10px] bg-black/30 px-1.5 py-0.5 rounded font-bold">0/16</span>
+              </button>
+              <button type="button" onclick="openCatTab(5)" id="sideTab5" class="side-cat-btn w-full flex items-center justify-between px-3 py-2 rounded-lg text-[11px] font-medium text-emerald-100/75 hover:bg-[#17431f]/50 hover:text-white transition">
+                <span>5. Villa Checklist</span>
+                <span id="sideProg_villa" class="text-[10px] bg-black/30 px-1.5 py-0.5 rounded font-bold">0/162</span>
+              </button>
+              <button type="button" onclick="openCatTab(6)" id="sideTab6" class="side-cat-btn w-full flex items-center justify-between px-3 py-2 rounded-lg text-[11px] font-medium text-emerald-100/75 hover:bg-[#17431f]/50 hover:text-white transition">
+                <span>6. Guest / F&B</span>
+              </button>
+              <button type="button" onclick="openCatTab(7)" id="sideTab7" class="side-cat-btn w-full flex items-center justify-between px-3 py-2 rounded-lg text-[11px] font-medium text-emerald-100/75 hover:bg-[#17431f]/50 hover:text-white transition">
+                <span>7. Operational</span>
+              </button>
+              <button type="button" onclick="openCatTab(8)" id="sideTab8" class="side-cat-btn w-full flex items-center justify-between px-3 py-2 rounded-lg text-[11px] font-medium text-emerald-100/75 hover:bg-[#17431f]/50 hover:text-white transition">
+                <span>8. Staff in Charge</span>
+              </button>
             </div>
           </div>
 
@@ -129,7 +157,7 @@
             <i class="fa-solid fa-clock-rotate-left w-4"></i> History & Export PDF
           </button>
 
-          <!-- MENU 3 BARU: HISTORY ISSUE (TRACKER & DISPATCH KE HOD) -->
+          <!-- MENU 3: HISTORY ISSUE (TRACKER & DISPATCH KE HOD) -->
           <button type="button" id="navBtnIssues" onclick="switchMainView('issues')" class="w-full flex items-center justify-between px-3.5 py-2.5 hover:bg-[#17431f]/50 rounded-xl text-emerald-100/85 font-bold text-xs text-left transition mt-1">
             <span><i class="fa-solid fa-triangle-exclamation text-amber-400 w-4 mr-1.5"></i> History Issue</span>
             <span id="sidebarOpenIssueBadge" class="hidden bg-red-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full">0</span>
@@ -156,7 +184,7 @@
 
     <!-- MAIN APP AREA -->
     <main class="flex-1 w-full min-w-0 p-3 sm:p-5 md:p-8 overflow-y-auto pb-28">
-      <header class="flex items-center justify-between gap-2 mb-5 bg-white p-3.5 md:p-4 rounded-2xl border border-slate-200 shadow-sm">
+      <header class="flex items-center justify-between gap-2 mb-4 bg-white p-3.5 md:p-4 rounded-2xl border border-slate-200 shadow-sm">
         <div class="flex items-center gap-2.5">
           <button type="button" onclick="openSidebarMobile()" class="md:hidden p-2.5 bg-emerald-50 text-[#17431f] hover:bg-emerald-100 rounded-xl transition text-base"><i class="fa-solid fa-bars"></i></button>
           <div>
@@ -169,27 +197,48 @@
         </div>
       </header>
 
+      <!-- BANNER PEMULIHAN AUTO-SAVE LOKAL -->
+      <div id="autoSaveRestoreBanner" class="hidden mb-4 bg-amber-50 border border-amber-300 rounded-2xl p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+        <div class="flex items-center gap-2.5 text-xs text-amber-900">
+          <i class="fa-solid fa-clock-rotate-left text-amber-600 text-base"></i>
+          <div>
+            <strong class="block font-extrabold">Ditemukan Draft Belum Tersimpan di Perangkat Ini</strong>
+            <span id="autoSaveBannerTime" class="text-[11px] text-amber-700">Tersimpan otomatis secara lokal.</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="restoreLocalBackup()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl transition">Pulihkan Isian</button>
+          <button type="button" onclick="discardLocalBackup()" class="bg-white hover:bg-amber-100 text-amber-800 border border-amber-300 text-xs font-bold px-3 py-1.5 rounded-xl transition">Abaikan</button>
+        </div>
+      </div>
+
       <!-- ==================== VIEW A: FORM INPUT / DRAFT ==================== -->
-      <div id="viewForm" class="space-y-5">
+      <div id="viewForm" class="space-y-4">
         <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-2">
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
             <span id="badgeReportId" class="bg-emerald-100 text-[#17431f] text-[11px] font-extrabold px-2.5 py-1 rounded-lg">Draft Baru</span>
             <span id="lastSavedLabel" class="text-[11px] text-slate-500">Belum disimpan</span>
+            <span id="localDraftIndicator" class="hidden text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
+              <i class="fa-solid fa-cloud-check mr-1"></i>Auto-saved lokal
+            </span>
           </div>
-          <button type="button" onclick="createNewReport()" class="text-xs font-bold text-slate-600 hover:text-[#17431f] bg-slate-100 hover:bg-emerald-50 px-3 py-1.5 rounded-lg border border-slate-200 transition">
-            <i class="fa-solid fa-file-circle-plus mr-1"></i> Laporan Baru
-          </button>
+          <div class="flex items-center gap-2">
+            <span id="overallProgressBadge" class="text-[11px] font-extrabold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">Total: 0/234</span>
+            <button type="button" onclick="createNewReport()" class="text-xs font-bold text-slate-600 hover:text-[#17431f] bg-slate-100 hover:bg-emerald-50 px-3 py-1.5 rounded-lg border border-slate-200 transition">
+              <i class="fa-solid fa-file-circle-plus mr-1"></i> Laporan Baru
+            </button>
+          </div>
         </div>
 
         <section class="bg-white p-3.5 md:p-5 rounded-2xl border border-slate-200 shadow-sm">
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 bg-emerald-50/40 p-3 rounded-xl border border-emerald-100/60">
             <div>
               <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Day / Date</label>
-              <input type="text" id="DayDate" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-semibold focus:ring-2 focus:ring-[#17431f] outline-none">
+              <input type="text" id="DayDate" oninput="triggerAutoSave()" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-semibold focus:ring-2 focus:ring-[#17431f] outline-none">
             </div>
             <div>
               <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Time / Shift</label>
-              <select id="Time" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-semibold focus:ring-2 focus:ring-[#17431f] outline-none">
+              <select id="Time" onchange="triggerAutoSave()" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-semibold focus:ring-2 focus:ring-[#17431f] outline-none">
                 <option value="07.00 - 15.00">Morning (07.00 - 15.00)</option>
                 <option value="15.00 - 23.00" selected>Evening (15.00 - 23.00)</option>
                 <option value="23.00 - 07.00">Night (23.00 - 07.00)</option>
@@ -197,11 +246,11 @@
             </div>
             <div>
               <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">MOD Name</label>
-              <input type="text" id="ModName" class="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 text-xs font-bold text-[#17431f] outline-none">
+              <input type="text" id="ModName" oninput="triggerAutoSave()" class="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 text-xs font-bold text-[#17431f] outline-none">
             </div>
             <div>
               <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Position</label>
-              <input type="text" id="ModPosition" class="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 text-xs font-bold text-[#17431f] outline-none">
+              <input type="text" id="ModPosition" oninput="triggerAutoSave()" class="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 text-xs font-bold text-[#17431f] outline-none">
             </div>
           </div>
         </section>
@@ -211,59 +260,104 @@
           <h3 class="text-xs md:text-sm font-bold text-[#17431f] uppercase tracking-wider border-b border-slate-100 pb-3 mb-4">1. General Information & Forecast</h3>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-xs">
             <div class="space-y-3">
-              <div class="flex items-center justify-between border-b border-slate-100 pb-2"><span class="font-semibold text-slate-600">1. Last night occupancy:</span><input type="text" id="LastOcc" placeholder="N/A" class="fc-input w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-right font-medium"></div>
-              <div class="flex items-center justify-between border-b border-slate-100 pb-2"><span class="font-semibold text-slate-600">2. Last night room sold:</span><input type="text" id="LastRoom" placeholder="N/A" class="fc-input w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-right font-medium"></div>
-              <div class="flex items-center justify-between border-b border-slate-100 pb-2"><span class="font-semibold text-slate-600">3. Last night average room rate:</span><input type="text" id="LastARR" placeholder="N/A" class="fc-input w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-right font-medium"></div>
+              <div class="flex items-center justify-between border-b border-slate-100 pb-2"><span class="font-semibold text-slate-600">1. Last night occupancy:</span><input type="text" id="LastOcc" oninput="triggerAutoSave()" placeholder="N/A" class="fc-input w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-right font-medium"></div>
+              <div class="flex items-center justify-between border-b border-slate-100 pb-2"><span class="font-semibold text-slate-600">2. Last night room sold:</span><input type="text" id="LastRoom" oninput="triggerAutoSave()" placeholder="N/A" class="fc-input w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-right font-medium"></div>
+              <div class="flex items-center justify-between border-b border-slate-100 pb-2"><span class="font-semibold text-slate-600">3. Last night average room rate:</span><input type="text" id="LastARR" oninput="triggerAutoSave()" placeholder="N/A" class="fc-input w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-right font-medium"></div>
               <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
                 <span class="font-bold text-slate-800 block border-b border-slate-200 pb-1">4. Today's forecast:</span>
-                <div class="flex justify-between items-center"><span class="pl-2 text-slate-600">- Occupancy:</span><input type="text" id="TodOcc" placeholder="N/A" class="fc-input w-1/2 bg-white border border-slate-300 rounded-lg p-1.5 text-right"></div>
-                <div class="flex justify-between items-center"><span class="pl-2 text-slate-600">- Room sold:</span><input type="text" id="TodRoom" placeholder="N/A" class="fc-input w-1/2 bg-white border border-slate-300 rounded-lg p-1.5 text-right"></div>
-                <div class="flex justify-between items-center"><span class="pl-2 text-slate-600">- Average room rate:</span><input type="text" id="TodARR" placeholder="N/A" class="fc-input w-1/2 bg-white border border-slate-300 rounded-lg p-1.5 text-right"></div>
+                <div class="flex justify-between items-center"><span class="pl-2 text-slate-600">- Occupancy:</span><input type="text" id="TodOcc" oninput="triggerAutoSave()" placeholder="N/A" class="fc-input w-1/2 bg-white border border-slate-300 rounded-lg p-1.5 text-right"></div>
+                <div class="flex justify-between items-center"><span class="pl-2 text-slate-600">- Room sold:</span><input type="text" id="TodRoom" oninput="triggerAutoSave()" placeholder="N/A" class="fc-input w-1/2 bg-white border border-slate-300 rounded-lg p-1.5 text-right"></div>
+                <div class="flex justify-between items-center"><span class="pl-2 text-slate-600">- Average room rate:</span><input type="text" id="TodARR" oninput="triggerAutoSave()" placeholder="N/A" class="fc-input w-1/2 bg-white border border-slate-300 rounded-lg p-1.5 text-right"></div>
               </div>
-              <div class="flex items-center justify-between border-b border-slate-100 pb-2"><span class="font-semibold text-slate-600">5. VIP welcome:</span><input type="text" id="VIPWelcome" placeholder="N/A" class="fc-input w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-1.5"></div>
-              <div class="flex items-center justify-between border-b border-slate-100 pb-2"><span class="font-semibold text-slate-600">6. Special Package:</span><input type="text" id="SpecPack" placeholder="N/A" class="fc-input w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-1.5"></div>
+              <div class="flex items-center justify-between border-b border-slate-100 pb-2"><span class="font-semibold text-slate-600">5. VIP welcome:</span><input type="text" id="VIPWelcome" oninput="triggerAutoSave()" placeholder="N/A" class="fc-input w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-1.5"></div>
+              <div class="flex items-center justify-between border-b border-slate-100 pb-2"><span class="font-semibold text-slate-600">6. Special Package:</span><input type="text" id="SpecPack" oninput="triggerAutoSave()" placeholder="N/A" class="fc-input w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-1.5"></div>
             </div>
             <div class="space-y-3">
-              <div class="flex items-center justify-between border-b border-slate-100 pb-2"><span class="font-semibold text-slate-600">7. F&B Cover:</span><input type="text" id="FBCover" placeholder="N/A" class="fc-input w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-right"></div>
-              <div class="flex items-center justify-between border-b border-slate-100 pb-2"><span class="font-semibold text-slate-600">8. F&B Revenue:</span><input type="text" id="FBRev" placeholder="N/A" class="fc-input w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-right"></div>
-              <div class="flex items-center justify-between border-b border-slate-100 pb-2"><span class="font-semibold text-slate-600">9. Event Today:</span><input type="text" id="EventTod" placeholder="N/A" class="fc-input w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-1.5"></div>
+              <div class="flex items-center justify-between border-b border-slate-100 pb-2"><span class="font-semibold text-slate-600">7. F&B Cover:</span><input type="text" id="FBCover" oninput="triggerAutoSave()" placeholder="N/A" class="fc-input w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-right"></div>
+              <div class="flex items-center justify-between border-b border-slate-100 pb-2"><span class="font-semibold text-slate-600">8. F&B Revenue:</span><input type="text" id="FBRev" oninput="triggerAutoSave()" placeholder="N/A" class="fc-input w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-right"></div>
+              <div class="flex items-center justify-between border-b border-slate-100 pb-2"><span class="font-semibold text-slate-600">9. Event Today:</span><input type="text" id="EventTod" oninput="triggerAutoSave()" placeholder="N/A" class="fc-input w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-1.5"></div>
               <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
                 <span class="font-bold text-slate-800 block border-b border-slate-200 pb-1">10. Tomorrow forecast:</span>
-                <div class="flex justify-between items-center"><span class="pl-2 text-slate-600">- Occupancy:</span><input type="text" id="TomOcc" placeholder="N/A" class="fc-input w-1/2 bg-white border border-slate-300 rounded-lg p-1.5 text-right"></div>
-                <div class="flex justify-between items-center"><span class="pl-2 text-slate-600">- Room sold:</span><input type="text" id="TomRoom" placeholder="N/A" class="fc-input w-1/2 bg-white border border-slate-300 rounded-lg p-1.5 text-right"></div>
-                <div class="flex justify-between items-center"><span class="pl-2 text-slate-600">- Average room rate:</span><input type="text" id="TomARR" placeholder="N/A" class="fc-input w-1/2 bg-white border border-slate-300 rounded-lg p-1.5 text-right"></div>
+                <div class="flex justify-between items-center"><span class="pl-2 text-slate-600">- Occupancy:</span><input type="text" id="TomOcc" oninput="triggerAutoSave()" placeholder="N/A" class="fc-input w-1/2 bg-white border border-slate-300 rounded-lg p-1.5 text-right"></div>
+                <div class="flex justify-between items-center"><span class="pl-2 text-slate-600">- Room sold:</span><input type="text" id="TomRoom" oninput="triggerAutoSave()" placeholder="N/A" class="fc-input w-1/2 bg-white border border-slate-300 rounded-lg p-1.5 text-right"></div>
+                <div class="flex justify-between items-center"><span class="pl-2 text-slate-600">- Average room rate:</span><input type="text" id="TomARR" oninput="triggerAutoSave()" placeholder="N/A" class="fc-input w-1/2 bg-white border border-slate-300 rounded-lg p-1.5 text-right"></div>
               </div>
-              <div class="flex items-center justify-between border-b border-slate-100 pb-2"><span class="font-semibold text-slate-600">11. Tomorrow VIP:</span><input type="text" id="TomVIP" placeholder="N/A" class="fc-input w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-1.5"></div>
-              <div class="flex items-center justify-between border-b border-slate-100 pb-2"><span class="font-semibold text-slate-600">12. Nordic visit time:</span><input type="text" id="NordicVisit" placeholder="N/A" class="fc-input w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-right"></div>
+              <div class="flex items-center justify-between border-b border-slate-100 pb-2"><span class="font-semibold text-slate-600">11. Tomorrow VIP:</span><input type="text" id="TomVIP" oninput="triggerAutoSave()" placeholder="N/A" class="fc-input w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-1.5"></div>
+              <div class="flex items-center justify-between border-b border-slate-100 pb-2"><span class="font-semibold text-slate-600">12. Nordic visit time:</span><input type="text" id="NordicVisit" oninput="triggerAutoSave()" placeholder="N/A" class="fc-input w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-right"></div>
             </div>
+          </div>
+          <div class="mt-5 pt-4 border-t border-slate-100 flex justify-end">
+            <button type="button" onclick="openCatTab(2)" class="bg-[#17431f] hover:bg-[#103016] text-white text-xs font-bold px-4 py-2 rounded-xl transition">Lanjut ke Public Area <i class="fa-solid fa-arrow-right ml-1"></i></button>
           </div>
         </section>
 
         <!-- TAB 2: PUBLIC AREA -->
         <section id="catPane2" class="cat-pane hidden bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm">
           <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-3 mb-4">
-            <h3 class="text-xs md:text-sm font-bold text-[#17431f] uppercase tracking-wider">2. Public & General Area Inspection (23 Items)</h3>
-            <button type="button" onclick="setAllGood('pa')" class="bg-emerald-50 hover:bg-emerald-100 text-[#17431f] border border-emerald-200 text-xs font-bold px-3 py-1.5 rounded-lg">Set Semua "Good"</button>
+            <div>
+              <h3 class="text-xs md:text-sm font-bold text-[#17431f] uppercase tracking-wider">2. Public & General Area Inspection</h3>
+              <span id="headProg_pa" class="text-[11px] font-bold text-slate-500">0/23 Selesai • 0 Issue</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button type="button" id="filterUnchecked_pa" onclick="toggleUncheckedFilter('pa')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-bold px-3 py-1.5 rounded-lg transition">
+                <i class="fa-solid fa-filter mr-1"></i> Belum Diisi
+              </button>
+              <button type="button" onclick="setAllGood('pa')" class="bg-emerald-50 hover:bg-emerald-100 text-[#17431f] border border-emerald-200 text-xs font-bold px-3 py-1.5 rounded-lg">
+                <i class="fa-solid fa-check-double mr-1"></i> Set Semua "Good"
+              </button>
+            </div>
           </div>
-          <div id="container_pa" class="overflow-x-auto rounded-xl border border-slate-200"></div>
+          <div id="container_pa" class="space-y-2"></div>
+          <div class="mt-5 pt-4 border-t border-slate-100 flex justify-between">
+            <button type="button" onclick="openCatTab(1)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-xl transition"><i class="fa-solid fa-arrow-left mr-1"></i> Sebelumnya</button>
+            <button type="button" onclick="openCatTab(3)" class="bg-[#17431f] hover:bg-[#103016] text-white text-xs font-bold px-4 py-2 rounded-xl transition">Lanjut ke BOH & Lobby <i class="fa-solid fa-arrow-right ml-1"></i></button>
+          </div>
         </section>
 
         <!-- TAB 3: BOH & LOBBY -->
         <section id="catPane3" class="cat-pane hidden bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm">
           <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-3 mb-4">
-            <h3 class="text-xs md:text-sm font-bold text-[#17431f] uppercase tracking-wider">3. BOH & Lobby Area (33 Items)</h3>
-            <button type="button" onclick="setAllGood('boh')" class="bg-emerald-50 hover:bg-emerald-100 text-[#17431f] border border-emerald-200 text-xs font-bold px-3 py-1.5 rounded-lg">Set Semua "Good"</button>
+            <div>
+              <h3 class="text-xs md:text-sm font-bold text-[#17431f] uppercase tracking-wider">3. BOH & Lobby Area</h3>
+              <span id="headProg_boh" class="text-[11px] font-bold text-slate-500">0/33 Selesai • 0 Issue</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button type="button" id="filterUnchecked_boh" onclick="toggleUncheckedFilter('boh')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-bold px-3 py-1.5 rounded-lg transition">
+                <i class="fa-solid fa-filter mr-1"></i> Belum Diisi
+              </button>
+              <button type="button" onclick="setAllGood('boh')" class="bg-emerald-50 hover:bg-emerald-100 text-[#17431f] border border-emerald-200 text-xs font-bold px-3 py-1.5 rounded-lg">
+                <i class="fa-solid fa-check-double mr-1"></i> Set Semua "Good"
+              </button>
+            </div>
           </div>
-          <div id="container_boh" class="overflow-x-auto rounded-xl border border-slate-200"></div>
+          <div id="container_boh" class="space-y-2"></div>
+          <div class="mt-5 pt-4 border-t border-slate-100 flex justify-between">
+            <button type="button" onclick="openCatTab(2)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-xl transition"><i class="fa-solid fa-arrow-left mr-1"></i> Sebelumnya</button>
+            <button type="button" onclick="openCatTab(4)" class="bg-[#17431f] hover:bg-[#103016] text-white text-xs font-bold px-4 py-2 rounded-xl transition">Lanjut ke Restaurant <i class="fa-solid fa-arrow-right ml-1"></i></button>
+          </div>
         </section>
 
         <!-- TAB 4: RESTAURANT -->
         <section id="catPane4" class="cat-pane hidden bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm">
           <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-3 mb-4">
-            <h3 class="text-xs md:text-sm font-bold text-[#17431f] uppercase tracking-wider">4. Restaurant - Kitchen & Bar (16 Items)</h3>
-            <button type="button" onclick="setAllGood('rest')" class="bg-emerald-50 hover:bg-emerald-100 text-[#17431f] border border-emerald-200 text-xs font-bold px-3 py-1.5 rounded-lg">Set Semua "Good"</button>
+            <div>
+              <h3 class="text-xs md:text-sm font-bold text-[#17431f] uppercase tracking-wider">4. Restaurant - Kitchen & Bar</h3>
+              <span id="headProg_rest" class="text-[11px] font-bold text-slate-500">0/16 Selesai • 0 Issue</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button type="button" id="filterUnchecked_rest" onclick="toggleUncheckedFilter('rest')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-bold px-3 py-1.5 rounded-lg transition">
+                <i class="fa-solid fa-filter mr-1"></i> Belum Diisi
+              </button>
+              <button type="button" onclick="setAllGood('rest')" class="bg-emerald-50 hover:bg-emerald-100 text-[#17431f] border border-emerald-200 text-xs font-bold px-3 py-1.5 rounded-lg">
+                <i class="fa-solid fa-check-double mr-1"></i> Set Semua "Good"
+              </button>
+            </div>
           </div>
-          <div id="container_rest" class="overflow-x-auto rounded-xl border border-slate-200"></div>
+          <div id="container_rest" class="space-y-2"></div>
+          <div class="mt-5 pt-4 border-t border-slate-100 flex justify-between">
+            <button type="button" onclick="openCatTab(3)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-xl transition"><i class="fa-solid fa-arrow-left mr-1"></i> Sebelumnya</button>
+            <button type="button" onclick="openCatTab(5)" class="bg-[#17431f] hover:bg-[#103016] text-white text-xs font-bold px-4 py-2 rounded-xl transition">Lanjut ke Villa Checklist <i class="fa-solid fa-arrow-right ml-1"></i></button>
+          </div>
         </section>
 
         <!-- TAB 5: VILLA CHECKLIST -->
@@ -279,15 +373,23 @@
           </div>
           <div id="villaSubTabs" class="flex gap-2 border-b border-slate-200 pb-3 mb-4 overflow-x-auto"></div>
           <div id="villaSubContent"></div>
+          <div class="mt-5 pt-4 border-t border-slate-100 flex justify-between">
+            <button type="button" onclick="openCatTab(4)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-xl transition"><i class="fa-solid fa-arrow-left mr-1"></i> Sebelumnya</button>
+            <button type="button" onclick="openCatTab(6)" class="bg-[#17431f] hover:bg-[#103016] text-white text-xs font-bold px-4 py-2 rounded-xl transition">Lanjut ke Guest / F&B <i class="fa-solid fa-arrow-right ml-1"></i></button>
+          </div>
         </section>
 
         <!-- TAB 6: GUEST / F&B COMMENTS -->
         <section id="catPane6" class="cat-pane hidden bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm">
           <h3 class="text-xs md:text-sm font-bold text-[#17431f] uppercase tracking-wider border-b border-slate-100 pb-3 mb-4">6. Guest / F&B Comments</h3>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-            <div><label class="font-bold text-slate-700 block mb-1.5">Guest Comments:</label><textarea id="GuestCom" rows="4" placeholder="If Any" class="com-input w-full bg-slate-50 border border-slate-200 rounded-xl p-3"></textarea></div>
-            <div><label class="font-bold text-slate-700 block mb-1.5">Food & Beverage:</label><textarea id="FBCom" rows="4" placeholder="If Any" class="com-input w-full bg-slate-50 border border-slate-200 rounded-xl p-3"></textarea></div>
-            <div><label class="font-bold text-slate-700 block mb-1.5">Not Available Items:</label><textarea id="NA_Items" rows="4" placeholder="If Any" class="com-input w-full bg-slate-50 border border-slate-200 rounded-xl p-3"></textarea></div>
+            <div><label class="font-bold text-slate-700 block mb-1.5">Guest Comments:</label><textarea id="GuestCom" oninput="triggerAutoSave()" rows="4" placeholder="If Any" class="com-input w-full bg-slate-50 border border-slate-200 rounded-xl p-3"></textarea></div>
+            <div><label class="font-bold text-slate-700 block mb-1.5">Food & Beverage:</label><textarea id="FBCom" oninput="triggerAutoSave()" rows="4" placeholder="If Any" class="com-input w-full bg-slate-50 border border-slate-200 rounded-xl p-3"></textarea></div>
+            <div><label class="font-bold text-slate-700 block mb-1.5">Not Available Items:</label><textarea id="NA_Items" oninput="triggerAutoSave()" rows="4" placeholder="If Any" class="com-input w-full bg-slate-50 border border-slate-200 rounded-xl p-3"></textarea></div>
+          </div>
+          <div class="mt-5 pt-4 border-t border-slate-100 flex justify-between">
+            <button type="button" onclick="openCatTab(5)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-xl transition"><i class="fa-solid fa-arrow-left mr-1"></i> Sebelumnya</button>
+            <button type="button" onclick="openCatTab(7)" class="bg-[#17431f] hover:bg-[#103016] text-white text-xs font-bold px-4 py-2 rounded-xl transition">Lanjut ke Operational <i class="fa-solid fa-arrow-right ml-1"></i></button>
           </div>
         </section>
 
@@ -295,13 +397,17 @@
         <section id="catPane7" class="cat-pane hidden bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm">
           <h3 class="text-xs md:text-sm font-bold text-[#17431f] uppercase tracking-wider border-b border-slate-100 pb-3 mb-4">7. Operational Comments & Project</h3>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-            <div><label class="font-bold text-slate-700 block mb-1">General Observation:</label><textarea id="GenObs" rows="3" placeholder="If Any" class="com-input w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5"></textarea></div>
-            <div><label class="font-bold text-slate-700 block mb-1">Gardening Observation:</label><textarea id="GardObs" rows="3" placeholder="If Any" class="com-input w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5"></textarea></div>
-            <div><label class="font-bold text-slate-700 block mb-1">Ground Water Tank Level (%):</label><input type="text" id="GWT_Level" placeholder="e.g. 85%" class="com-input w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5"></div>
-            <div><label class="font-bold text-slate-700 block mb-1">PLN Meter (53 KVA):</label><input type="text" id="PLN_53" placeholder="e.g. 466.446" class="com-input w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5"></div>
-            <div><label class="font-bold text-slate-700 block mb-1">PLN Meter (192 KVA):</label><input type="text" id="PLN_192" placeholder="e.g. 769.259" class="com-input w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5"></div>
-            <div><label class="font-bold text-slate-700 block mb-1">Pool Maintenance:</label><textarea id="PoolObs" rows="2" placeholder="If Any" class="com-input w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5"></textarea></div>
-            <div class="md:col-span-3"><label class="font-bold text-slate-700 block mb-1">Room Showing:</label><textarea id="RoomShow" rows="2" placeholder="If Any" class="com-input w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5"></textarea></div>
+            <div><label class="font-bold text-slate-700 block mb-1">General Observation:</label><textarea id="GenObs" oninput="triggerAutoSave()" rows="3" placeholder="If Any" class="com-input w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5"></textarea></div>
+            <div><label class="font-bold text-slate-700 block mb-1">Gardening Observation:</label><textarea id="GardObs" oninput="triggerAutoSave()" rows="3" placeholder="If Any" class="com-input w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5"></textarea></div>
+            <div><label class="font-bold text-slate-700 block mb-1">Ground Water Tank Level (%):</label><input type="text" id="GWT_Level" oninput="triggerAutoSave()" placeholder="e.g. 85%" class="com-input w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5"></div>
+            <div><label class="font-bold text-slate-700 block mb-1">PLN Meter (53 KVA):</label><input type="text" id="PLN_53" oninput="triggerAutoSave()" placeholder="e.g. 466.446" class="com-input w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5"></div>
+            <div><label class="font-bold text-slate-700 block mb-1">PLN Meter (192 KVA):</label><input type="text" id="PLN_192" oninput="triggerAutoSave()" placeholder="e.g. 769.259" class="com-input w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5"></div>
+            <div><label class="font-bold text-slate-700 block mb-1">Pool Maintenance:</label><textarea id="PoolObs" oninput="triggerAutoSave()" rows="2" placeholder="If Any" class="com-input w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5"></textarea></div>
+            <div class="md:col-span-3"><label class="font-bold text-slate-700 block mb-1">Room Showing:</label><textarea id="RoomShow" oninput="triggerAutoSave()" rows="2" placeholder="If Any" class="com-input w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5"></textarea></div>
+          </div>
+          <div class="mt-5 pt-4 border-t border-slate-100 flex justify-between">
+            <button type="button" onclick="openCatTab(6)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-xl transition"><i class="fa-solid fa-arrow-left mr-1"></i> Sebelumnya</button>
+            <button type="button" onclick="openCatTab(8)" class="bg-[#17431f] hover:bg-[#103016] text-white text-xs font-bold px-4 py-2 rounded-xl transition">Lanjut ke Staff in Charge <i class="fa-solid fa-arrow-right ml-1"></i></button>
           </div>
         </section>
 
@@ -325,6 +431,9 @@
               </thead>
               <tbody id="staffTableBody" class="divide-y divide-slate-100"></tbody>
             </table>
+          </div>
+          <div class="mt-5 pt-4 border-t border-slate-100 flex justify-start">
+            <button type="button" onclick="openCatTab(7)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-xl transition"><i class="fa-solid fa-arrow-left mr-1"></i> Sebelumnya</button>
           </div>
         </section>
       </div>
@@ -384,7 +493,6 @@
             </div>
           </div>
 
-          <!-- Filter Sub Area & Status -->
           <div class="flex flex-wrap gap-2 items-center justify-between">
             <div class="flex flex-wrap gap-2 flex-1">
               <select id="issueAreaFilter" onchange="renderIssuesTable()" class="bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 text-xs font-bold text-[#17431f] outline-none">
@@ -413,7 +521,6 @@
           </div>
         </div>
 
-        <!-- Tabel History Issue -->
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-x-auto">
           <table class="w-full text-left border-collapse text-xs min-w-[900px]">
             <thead>
@@ -437,13 +544,13 @@
     </main>
   </div>
 
-  <!-- STICKY BOTTOM ACTION BAR: HANYA TOMBOL "SIMPAN DATA" -->
+  <!-- STICKY BOTTOM ACTION BAR -->
   <div id="bottomActionBar" class="hidden fixed bottom-0 left-0 md:left-64 right-0 bg-white/95 backdrop-blur border-t border-slate-200 px-3 md:px-8 py-2.5 z-40 shadow-lg">
     <div class="max-w-6xl mx-auto flex flex-wrap justify-between items-center gap-2">
       <span class="text-[11px] text-slate-500 hidden lg:inline">Semua item berstatus <strong>Issue</strong> otomatis masuk ke menu <strong>History Issue</strong> saat disimpan.</span>
       <div class="ml-auto w-full sm:w-auto flex justify-end">
         <button type="button" onclick="handleSaveData()" class="w-full sm:w-auto justify-center bg-[#17431f] hover:bg-[#103016] text-white font-bold text-xs px-6 py-2.5 rounded-xl shadow-md transition flex items-center gap-2">
-          <i class="fa-solid fa-floppy-disk"></i> Simpan Data
+          <i class="fa-solid fa-floppy-disk"></i> Simpan Data ke Server
         </button>
       </div>
     </div>
@@ -501,7 +608,7 @@
     </div>
   </div>
 
-  <!-- MODAL KIRIM EMAIL ISSUE KE HOD (ENGINEERING / HOUSEKEEPING / SEMUA HOD) -->
+  <!-- MODAL KIRIM EMAIL ISSUE KE HOD -->
   <div id="issueEmailModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden">
       <div class="bg-red-700 text-white px-5 py-3.5 flex justify-between items-center">
@@ -559,7 +666,7 @@ const VILLA_ENUM = [
 const DEPT_ENUM = ["FO", "HK", "EG", "FBS", "FBK", "SEC"];
 const SHIFT_ENUM = ["Morning Shift", "Middle Shift", "Evening Shift", "Night Shift"];
 
-const PA_ITEMS = [
+let PA_ITEMS = [
   ["TOTEM & ENTRANCE", "Villa Entrance – Main Road"], ["TOTEM & ENTRANCE", "Villa Totem Main Entrance"],
   ["TOTEM & ENTRANCE", "Entrance Pathway"], ["GENSET", "Genset Building Front Side"],
   ["GENSET", "Genset Building Inside"], ["GARDEN & PATHWAY", "Pond (water flow)"],
@@ -574,7 +681,7 @@ const PA_ITEMS = [
   ["ALL", "All Lamp/Lighting"]
 ];
 
-const BOH_ITEMS = [
+let BOH_ITEMS = [
   ["OFFICE", "Staircase"], ["OFFICE", "ITM Office"], ["OFFICE", "GM Office"], ["OFFICE", "HRM Office"],
   ["OFFICE", "PRC/PRM Office"], ["OFFICE", "CA Office"], ["OFFICE", "Accounting Office area"],
   ["OFFICE", "Meeting Area"], ["OFFICE", "Terrace Garden"], ["OFFICE", "Toilet 2nd floor"],
@@ -588,7 +695,7 @@ const BOH_ITEMS = [
   ["OFFICE & LOBBY AREA", "All Lamp/Lighting"]
 ];
 
-const REST_ITEMS = [
+let REST_ITEMS = [
   ["KITCHEN", "Cabinet"], ["KITCHEN", "Freezer"], ["KITCHEN", "Chiller"], ["KITCHEN", "Sink"],
   ["KITCHEN", "Stove with Oven"], ["KITCHEN", "Deep Fryer"], ["KITCHEN", "Wok"], ["KITCHEN", "Ceiling"],
   ["KITCHEN", "Floor"], ["KITCHEN", "Gutter & Grease Trap"], ["BAR", "Restaurant Entrance-Signage"],
@@ -596,7 +703,7 @@ const REST_ITEMS = [
   ["BAR", "Restaurant Bar"], ["BAR & KITCHEN", "All Lamp/Lighting"]
 ];
 
-const VILLA_ITEMS = [
+let VILLA_ITEMS = [
   ["1st Floor", "Entrance"], ["1st Floor", "Garden Entrance"], ["1st Floor", "Main Door & Villa Number"],
   ["1st Floor", "Clay Pot Décor / Gentong"], ["1st Floor", "Pool"], ["1st Floor", "Kitchenette & Table"],
   ["1st Floor", "Refrigerator & Cabinet"], ["1st Floor", "Blind Curtain"], ["1st Floor", "Induction is Working"],
@@ -628,6 +735,8 @@ const VILLA_ITEMS = [
 ];
 
 const SESSION_KEY = 'seahaven_mod_user_session';
+const DRAFT_BACKUP_KEY = 'seahaven_mod_autosave_draft';
+
 let currentUser = null;
 let currentReportId = '';
 let currentPdfUrl = '';
@@ -637,6 +746,18 @@ let allIssuesList = [];
 let selectedIssueIds = new Set();
 let lastExportedIssuePdfId = '';
 let hodDirectory = [];
+let autoSaveTimer = null;
+let isRestoringForm = false;
+const uncheckedFilterState = {};
+
+function escapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 function showLoader(msg) {
   document.getElementById('globalLoaderText').innerText = msg || 'Memproses...';
@@ -646,7 +767,7 @@ function hideLoader() {
   document.getElementById('globalLoader').classList.add('hidden');
 }
 
-// ==================== LOGIN & SESSION (PERSISTENT LOCALSTORAGE) ====================
+// ==================== LOGIN & SESSION ====================
 window.addEventListener('DOMContentLoaded', () => {
   try {
     const savedSession = localStorage.getItem(SESSION_KEY);
@@ -729,9 +850,7 @@ function enterDashboard(userData, saveToStorage = true) {
   if (saveToStorage) {
     try {
       localStorage.setItem(SESSION_KEY, JSON.stringify(userData));
-    } catch (e) {
-      console.warn('Gagal menyimpan sesi ke localStorage:', e);
-    }
+    } catch (e) {}
   }
 
   document.getElementById('loggedUserName').innerText = currentUser.fullName;
@@ -744,8 +863,26 @@ function enterDashboard(userData, saveToStorage = true) {
   document.getElementById('bottomActionBar').classList.remove('hidden');
 
   initDefaultForm();
-  refreshOpenIssueBadge();
-  google.script.run.withSuccessHandler(list => { hodDirectory = list || []; }).getHODEmailsList();
+  checkExistingLocalBackup();
+
+  // Single Bootstrap Call (Mengambil HOD Emails + Open Issue Badge + Master Rows sekaligus)
+  google.script.run
+    .withSuccessHandler(boot => {
+      if (!boot) return;
+      hodDirectory = boot.hodEmails || [];
+      updateOpenIssueBadgeUI(boot.openIssueCount || 0);
+    })
+    .getInitialDashboardData();
+}
+
+function updateOpenIssueBadgeUI(openCount) {
+  const badge = document.getElementById('sidebarOpenIssueBadge');
+  if (openCount > 0) {
+    badge.innerText = openCount;
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
 }
 
 function handleLogout() {
@@ -758,6 +895,58 @@ function handleLogout() {
   document.body.classList.add('flex', 'items-center', 'justify-center');
   document.getElementById('loginScreen').classList.remove('hidden');
   document.getElementById('loginPassword').value = '';
+}
+
+// ==================== AUTO-SAVE & PEMULIHAN DRAFT LOKAL ====================
+function triggerAutoSave() {
+  if (isRestoringForm) return;
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(() => {
+    try {
+      const snapshot = {
+        savedAt: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        payload: collectFormPayload()
+      };
+      localStorage.setItem(DRAFT_BACKUP_KEY, JSON.stringify(snapshot));
+      const ind = document.getElementById('localDraftIndicator');
+      ind.innerHTML = `<i class="fa-solid fa-cloud-check mr-1"></i>Auto-saved (${snapshot.savedAt})`;
+      ind.classList.remove('hidden');
+    } catch (e) {}
+  }, 900);
+}
+
+function checkExistingLocalBackup() {
+  try {
+    const raw = localStorage.getItem(DRAFT_BACKUP_KEY);
+    if (!raw) return;
+    const snap = JSON.parse(raw);
+    if (snap && snap.payload) {
+      document.getElementById('autoSaveBannerTime').innerText = `Tersimpan otomatis pada pukul ${snap.savedAt} (${snap.payload.header?.DayDate || 'Draft'}).`;
+      document.getElementById('autoSaveRestoreBanner').classList.remove('hidden');
+    }
+  } catch (e) {
+    localStorage.removeItem(DRAFT_BACKUP_KEY);
+  }
+}
+
+function restoreLocalBackup() {
+  try {
+    const raw = localStorage.getItem(DRAFT_BACKUP_KEY);
+    if (!raw) return;
+    const snap = JSON.parse(raw);
+    if (snap && snap.payload) {
+      populateFormFromPayload(snap.payload, 'Dipulihkan dari perangkat');
+      document.getElementById('autoSaveRestoreBanner').classList.add('hidden');
+    }
+  } catch (e) {
+    alert('Gagal memulihkan draft lokal.');
+  }
+}
+
+function discardLocalBackup() {
+  localStorage.removeItem(DRAFT_BACKUP_KEY);
+  document.getElementById('autoSaveRestoreBanner').classList.add('hidden');
+  document.getElementById('localDraftIndicator').classList.add('hidden');
 }
 
 // ==================== SIDEBAR & NAVIGATION ====================
@@ -811,8 +1000,9 @@ function switchMainView(view) {
   }
 }
 
-// ==================== INIT FORM & SIDEBAR KATEGORI ====================
+// ==================== INIT FORM & MOBILE-FIRST 1-TAP CHECKLIST ====================
 function initDefaultForm() {
+  isRestoringForm = true;
   currentReportId = '';
   currentPdfUrl = '';
   document.getElementById('badgeReportId').innerText = 'Draft Baru';
@@ -827,9 +1017,9 @@ function initDefaultForm() {
     document.getElementById('ModPosition').value = currentUser.position;
   }
 
-  renderChecklistTable('container_pa', 'pa', PA_ITEMS);
-  renderChecklistTable('container_boh', 'boh', BOH_ITEMS);
-  renderChecklistTable('container_rest', 'rest', REST_ITEMS);
+  renderChecklistCards('container_pa', 'pa', PA_ITEMS);
+  renderChecklistCards('container_boh', 'boh', BOH_ITEMS);
+  renderChecklistCards('container_rest', 'rest', REST_ITEMS);
 
   villaCount = 0;
   document.getElementById('villaSubTabs').innerHTML = '';
@@ -839,11 +1029,14 @@ function initDefaultForm() {
 
   document.getElementById('staffTableBody').innerHTML = '';
   DEPT_ENUM.forEach((d, idx) => addStaffRow(d, '', SHIFT_ENUM[idx] || 'Morning Shift'));
+  isRestoringForm = false;
+  updateAllProgressCounters();
   openCatTab(1);
 }
 
 function createNewReport() {
-  if (!confirm('Buat form laporan baru? Pastikan data sebelumnya sudah disimpan.')) return;
+  if (!confirm('Buat form laporan baru? Pastikan data sebelumnya sudah disimpan ke server.')) return;
+  discardLocalBackup();
   document.querySelectorAll('.fc-input, .com-input').forEach(el => el.value = '');
   initDefaultForm();
 }
@@ -863,44 +1056,207 @@ function openCatTab(num) {
   const activeBtn = document.getElementById('sideTab' + num);
   activeBtn.classList.add('bg-emerald-800/70', 'text-white', 'font-bold');
   activeBtn.classList.remove('text-emerald-100/75', 'font-medium');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function renderChecklistTable(containerId, prefix, items) {
-  let html = `<table class="w-full text-left border-collapse text-xs min-w-[580px]">
-    <thead><tr class="bg-slate-50 text-slate-500 uppercase text-[10px] font-extrabold border-b border-slate-200">
-      <th class="py-2.5 px-3 w-10 text-center">#</th><th class="py-2.5 px-3 w-36">Sub Area</th><th class="py-2.5 px-3">Item Checklist</th><th class="py-2.5 px-3 w-32">Status</th><th class="py-2.5 px-3 w-52">Notes</th>
-    </tr></thead><tbody class="divide-y divide-slate-100">`;
+function buildChecklistRowCard(prefix, idx, subArea, itemName, statusVal = '', notesVal = '') {
+  const i = idx + 1;
+  const safeNotes = escapeHtml(notesVal);
+  const cardBorder = statusVal ? `row-card-${statusVal}` : 'border-l-4 border-l-slate-200 bg-white';
+  const showNotes = (statusVal === 'Pending' || statusVal === 'Issue' || notesVal.trim() !== '') ? '' : 'hidden sm:block';
+
+  return `
+    <div id="${prefix}_card_${i}" data-prefix="${prefix}" class="chk-card-${prefix} ${cardBorder} border border-slate-200 rounded-xl p-3 transition-colors">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+        <div class="flex items-start gap-2.5 min-w-0 flex-1">
+          <span class="text-[11px] font-extrabold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md flex-shrink-0 mt-0.5">${i}</span>
+          <div class="min-w-0">
+            <span class="inline-block bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wide mb-0.5">${escapeHtml(subArea)}</span>
+            <p class="text-xs font-bold text-slate-800 leading-snug">${escapeHtml(itemName)}</p>
+          </div>
+        </div>
+
+        <!-- 1-TAP PILL BUTTONS -->
+        <div class="flex items-center gap-1.5 flex-shrink-0">
+          <input type="hidden" id="${prefix}_S${i}" value="${escapeHtml(statusVal)}">
+          <button type="button" onclick="selectItemStatus('${prefix}', ${i}, 'Good')" id="${prefix}_btnGood_${i}"
+            class="pill-btn ${statusVal === 'Good' ? 'pill-Good-active' : 'bg-slate-50 text-slate-600 hover:bg-emerald-50 border-slate-200'} flex-1 sm:flex-none px-3 py-1.5 rounded-lg border text-[11px] font-extrabold flex items-center justify-center gap-1">
+            <i class="fa-solid fa-check"></i> Good
+          </button>
+          <button type="button" onclick="selectItemStatus('${prefix}', ${i}, 'Pending')" id="${prefix}_btnPending_${i}"
+            class="pill-btn ${statusVal === 'Pending' ? 'pill-Pending-active' : 'bg-slate-50 text-slate-600 hover:bg-amber-50 border-slate-200'} flex-1 sm:flex-none px-3 py-1.5 rounded-lg border text-[11px] font-extrabold flex items-center justify-center gap-1">
+            <i class="fa-solid fa-clock"></i> Pending
+          </button>
+          <button type="button" onclick="selectItemStatus('${prefix}', ${i}, 'Issue')" id="${prefix}_btnIssue_${i}"
+            class="pill-btn ${statusVal === 'Issue' ? 'pill-Issue-active' : 'bg-slate-50 text-slate-600 hover:bg-red-50 border-slate-200'} flex-1 sm:flex-none px-3 py-1.5 rounded-lg border text-[11px] font-extrabold flex items-center justify-center gap-1">
+            <i class="fa-solid fa-triangle-exclamation"></i> Issue
+          </button>
+        </div>
+      </div>
+
+      <!-- NOTES INPUT (Otomatis muncul di Mobile saat Pending/Issue dipilih) -->
+      <div id="${prefix}_noteWrap_${i}" class="${showNotes} mt-2 pt-2 border-t border-slate-200/60">
+        <input type="text" id="${prefix}_N${i}" value="${safeNotes}" oninput="triggerAutoSave()"
+          placeholder="${statusVal === 'Issue' ? 'Wajib isi detail kerusakan / temuan issue...' : 'Catatan tambahan (opsional)...'}"
+          class="w-full bg-white/90 border ${statusVal === 'Issue' ? 'border-red-300 focus:border-red-500' : 'border-slate-200 focus:border-[#17431f]'} rounded-lg px-3 py-1.5 text-xs outline-none">
+      </div>
+    </div>
+  `;
+}
+
+function renderChecklistCards(containerId, prefix, items) {
+  let html = '';
   items.forEach((it, idx) => {
-    const i = idx + 1;
-    html += `<tr class="hover:bg-slate-50/80">
-      <td class="py-2 px-3 text-center text-slate-400 font-semibold">${i}</td>
-      <td class="py-2 px-3"><span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[10px] font-bold">${it[0]}</span></td>
-      <td class="py-2 px-3 font-medium text-slate-700">${it[1]}</td>
-      <td class="py-2 px-3">
-        <select id="${prefix}_S${i}" onchange="updateSelectColor(this)" class="w-full bg-white border border-slate-300 rounded-lg p-1.5 text-xs outline-none">
-          <option value="">-- Pilih --</option>
-          <option value="Good">Good</option>
-          <option value="Pending">Pending</option>
-          <option value="Issue">Issue</option>
-        </select>
-      </td>
-      <td class="py-2 px-3"><input type="text" id="${prefix}_N${i}" placeholder="Catatan..." class="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-xs focus:bg-white focus:border-[#17431f] outline-none"></td>
-    </tr>`;
+    html += buildChecklistRowCard(prefix, idx, it[0], it[1], '', '');
   });
-  html += `</tbody></table>`;
   document.getElementById(containerId).innerHTML = html;
 }
 
-function updateSelectColor(sel) {
-  sel.classList.remove('status-Good', 'status-Pending', 'status-Issue');
-  if (sel.value) sel.classList.add('status-' + sel.value);
+function selectItemStatus(prefix, i, chosenStatus) {
+  const hiddenInput = document.getElementById(`${prefix}_S${i}`);
+  const currentVal = hiddenInput.value;
+  // Klik ulang tombol yang sama akan mereset pilihan menjadi kosong
+  const nextVal = (currentVal === chosenStatus) ? '' : chosenStatus;
+  applyStatusVisual(prefix, i, nextVal);
+
+  if (nextVal === 'Issue' || nextVal === 'Pending') {
+    const noteInp = document.getElementById(`${prefix}_N${i}`);
+    if (noteInp) noteInp.focus();
+  }
+
+  updateAllProgressCounters();
+  triggerAutoSave();
+}
+
+function applyStatusVisual(prefix, i, statusVal) {
+  const hiddenInput = document.getElementById(`${prefix}_S${i}`);
+  if (!hiddenInput) return;
+  hiddenInput.value = statusVal;
+
+  const card = document.getElementById(`${prefix}_card_${i}`);
+  if (card) {
+    card.classList.remove('row-card-Good', 'row-card-Pending', 'row-card-Issue', 'border-l-slate-200', 'bg-white');
+    if (statusVal) {
+      card.classList.add(`row-card-${statusVal}`);
+    } else {
+      card.classList.add('border-l-slate-200', 'bg-white');
+    }
+  }
+
+  ['Good', 'Pending', 'Issue'].forEach(st => {
+    const btn = document.getElementById(`${prefix}_btn${st}_${i}`);
+    if (!btn) return;
+    btn.classList.remove('pill-Good-active', 'pill-Pending-active', 'pill-Issue-active', 'bg-slate-50', 'text-slate-600', 'border-slate-200');
+    if (statusVal === st) {
+      btn.classList.add(`pill-${st}-active`);
+    } else {
+      btn.classList.add('bg-slate-50', 'text-slate-600', 'border-slate-200');
+    }
+  });
+
+  const noteWrap = document.getElementById(`${prefix}_noteWrap_${i}`);
+  const noteInp = document.getElementById(`${prefix}_N${i}`);
+  if (noteWrap && noteInp) {
+    if (statusVal === 'Pending' || statusVal === 'Issue' || noteInp.value.trim() !== '') {
+      noteWrap.classList.remove('hidden');
+    } else {
+      noteWrap.classList.add('hidden', 'sm:block');
+    }
+    if (statusVal === 'Issue') {
+      noteInp.placeholder = 'Wajib isi detail kerusakan / temuan issue...';
+      noteInp.classList.add('border-red-300');
+    } else {
+      noteInp.placeholder = 'Catatan tambahan (opsional)...';
+      noteInp.classList.remove('border-red-300');
+    }
+  }
 }
 
 function setAllGood(prefix) {
-  document.querySelectorAll(`[id^="${prefix}_S"]`).forEach(sel => {
-    sel.value = 'Good';
-    updateSelectColor(sel);
+  document.querySelectorAll(`[id^="${prefix}_S"]`).forEach(inp => {
+    const idx = inp.id.split('_S')[1];
+    applyStatusVisual(prefix, idx, 'Good');
   });
+  updateAllProgressCounters();
+  triggerAutoSave();
+}
+
+function toggleUncheckedFilter(prefix) {
+  uncheckedFilterState[prefix] = !uncheckedFilterState[prefix];
+  const isOnlyUnchecked = uncheckedFilterState[prefix];
+  const btn = document.getElementById(`filterUnchecked_${prefix}`);
+  if (btn) {
+    btn.className = isOnlyUnchecked
+      ? 'bg-amber-600 text-white border border-amber-700 text-xs font-bold px-3 py-1.5 rounded-lg transition'
+      : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-bold px-3 py-1.5 rounded-lg transition';
+  }
+
+  document.querySelectorAll(`.chk-card-${prefix}`).forEach(card => {
+    const idx = card.id.split('_card_')[1];
+    const val = document.getElementById(`${prefix}_S${idx}`)?.value || '';
+    if (isOnlyUnchecked && val !== '') {
+      card.classList.add('hidden');
+    } else {
+      card.classList.remove('hidden');
+    }
+  });
+}
+
+function updateAllProgressCounters() {
+  const countStats = (prefix, total) => {
+    let filled = 0;
+    let issues = 0;
+    for (let i = 1; i <= total; i++) {
+      const val = document.getElementById(`${prefix}_S${i}`)?.value || '';
+      if (val) filled++;
+      if (val === 'Issue') issues++;
+    }
+    return { filled, total, issues };
+  };
+
+  const pa = countStats('pa', PA_ITEMS.length);
+  const boh = countStats('boh', BOH_ITEMS.length);
+  const rest = countStats('rest', REST_ITEMS.length);
+
+  const updateBadge = (elId, stats) => {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    el.innerText = `${stats.filled}/${stats.total}`;
+    if (stats.filled === stats.total && stats.total > 0) {
+      el.classList.add('bg-emerald-500', 'text-white');
+    } else {
+      el.classList.remove('bg-emerald-500', 'text-white');
+    }
+  };
+
+  updateBadge('sideProg_pa', pa);
+  updateBadge('sideProg_boh', boh);
+  updateBadge('sideProg_rest', rest);
+
+  if (document.getElementById('headProg_pa')) document.getElementById('headProg_pa').innerText = `${pa.filled}/${pa.total} Selesai • ${pa.issues} Issue`;
+  if (document.getElementById('headProg_boh')) document.getElementById('headProg_boh').innerText = `${boh.filled}/${boh.total} Selesai • ${boh.issues} Issue`;
+  if (document.getElementById('headProg_rest')) document.getElementById('headProg_rest').innerText = `${rest.filled}/${rest.total} Selesai • ${rest.issues} Issue`;
+
+  let villaFilled = 0;
+  let villaTotal = 0;
+  for (let v = 1; v <= villaCount; v++) {
+    if (document.getElementById(`VillaName_${v}`)) {
+      const vs = countStats(`V${v}`, VILLA_ITEMS.length);
+      villaFilled += vs.filled;
+      villaTotal += vs.total;
+      const vHead = document.getElementById(`headProg_V${v}`);
+      if (vHead) vHead.innerText = `${vs.filled}/${vs.total} Selesai • ${vs.issues} Issue`;
+    }
+  }
+
+  updateBadge('sideProg_villa', { filled: villaFilled, total: villaTotal });
+
+  const grandFilled = pa.filled + boh.filled + rest.filled + villaFilled;
+  const grandTotal = pa.total + boh.total + rest.total + villaTotal;
+  const overallEl = document.getElementById('overallProgressBadge');
+  if (overallEl) {
+    overallEl.innerText = `Terisi: ${grandFilled}/${grandTotal}`;
+  }
 }
 
 // ==================== VILLA DINAMIS ====================
@@ -910,7 +1266,7 @@ function addVillaBlock(selectedVilla = '', itemsData = []) {
   const isFirst = vIdx === 1;
 
   const tabBtn = `<button type="button" id="vtab_btn_${vIdx}" onclick="switchVillaTab(${vIdx})" class="vtab-btn ${isFirst ? 'bg-[#17431f] text-white' : 'bg-slate-100 text-slate-700'} px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition">
-    Villa #${vIdx} <span id="vtab_label_${vIdx}">${selectedVilla ? '('+selectedVilla+')' : ''}</span>
+    Villa #${vIdx} <span id="vtab_label_${vIdx}">${selectedVilla ? '('+escapeHtml(selectedVilla)+')' : ''}</span>
   </button>`;
   document.getElementById('villaSubTabs').insertAdjacentHTML('beforeend', tabBtn);
 
@@ -919,52 +1275,38 @@ function addVillaBlock(selectedVilla = '', itemsData = []) {
     optionsHtml += `<option value="${v}" ${v === selectedVilla ? 'selected' : ''}>${v}</option>`;
   });
 
-  let rowsHtml = '';
+  let cardsHtml = '';
   VILLA_ITEMS.forEach((it, idx) => {
-    const i = idx + 1;
     const st = itemsData[idx] ? itemsData[idx].status : '';
     const nt = itemsData[idx] ? itemsData[idx].notes : '';
-    rowsHtml += `<tr class="hover:bg-slate-50/80">
-      <td class="py-2 px-3 text-center text-slate-400 font-semibold">${i}</td>
-      <td class="py-2 px-3"><span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[10px] font-bold">${it[0]}</span></td>
-      <td class="py-2 px-3 font-medium text-slate-700">${it[1]}</td>
-      <td class="py-2 px-3">
-        <select id="V${vIdx}_S${i}" onchange="updateSelectColor(this)" class="w-full bg-white border border-slate-300 rounded-lg p-1.5 text-xs outline-none ${st ? 'status-'+st : ''}">
-          <option value="">-- Pilih --</option>
-          <option value="Good" ${st==='Good'?'selected':''}>Good</option>
-          <option value="Pending" ${st==='Pending'?'selected':''}>Pending</option>
-          <option value="Issue" ${st==='Issue'?'selected':''}>Issue</option>
-        </select>
-      </td>
-      <td class="py-2 px-3"><input type="text" id="V${vIdx}_N${i}" value="${nt}" placeholder="Catatan..." class="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-xs focus:bg-white focus:border-[#17431f] outline-none"></td>
-    </tr>`;
+    cardsHtml += buildChecklistRowCard(`V${vIdx}`, idx, it[0], it[1], st, nt);
   });
 
   const removeBtn = vIdx > 2 ? `<button type="button" onclick="removeVillaBlock(${vIdx})" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-bold px-3 py-1.5 rounded-lg"><i class="fa-solid fa-trash mr-1"></i> Hapus</button>` : '';
 
   const paneHtml = `<div id="vpane_${vIdx}" class="vpane ${isFirst ? '' : 'hidden'} space-y-3">
     <div class="bg-emerald-50/60 p-3 rounded-xl border border-emerald-200 flex flex-wrap justify-between items-center gap-2">
-      <div class="flex items-center gap-2">
+      <div class="flex flex-wrap items-center gap-2">
         <label class="text-xs font-extrabold text-[#17431f]">Unit Villa #${vIdx}:</label>
-        <select id="VillaName_${vIdx}" onchange="document.getElementById('vtab_label_${vIdx}').innerText = this.value ? '('+this.value+')' : ''" class="bg-white border border-emerald-300 text-[#17431f] font-bold rounded-lg px-3 py-1.5 text-xs outline-none">
+        <select id="VillaName_${vIdx}" onchange="document.getElementById('vtab_label_${vIdx}').innerText = this.value ? '('+this.value+')' : ''; triggerAutoSave();" class="bg-white border border-emerald-300 text-[#17431f] font-bold rounded-lg px-3 py-1.5 text-xs outline-none">
           ${optionsHtml}
         </select>
+        <span id="headProg_V${vIdx}" class="text-[11px] font-bold text-slate-600 bg-white px-2.5 py-1 rounded-lg border border-slate-200">0/81 Selesai • 0 Issue</span>
       </div>
-      <div class="flex gap-2">
-        <button type="button" onclick="setAllGood('V${vIdx}')" class="bg-white hover:bg-emerald-100 text-[#17431f] border border-emerald-300 text-xs font-bold px-3 py-1.5 rounded-lg">Set Semua "Good"</button>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" id="filterUnchecked_V${vIdx}" onclick="toggleUncheckedFilter('V${vIdx}')" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs font-bold px-3 py-1.5 rounded-lg">
+          <i class="fa-solid fa-filter mr-1"></i> Belum Diisi
+        </button>
+        <button type="button" onclick="setAllGood('V${vIdx}')" class="bg-white hover:bg-emerald-100 text-[#17431f] border border-emerald-300 text-xs font-bold px-3 py-1.5 rounded-lg">
+          <i class="fa-solid fa-check-double mr-1"></i> Set Semua "Good"
+        </button>
         ${removeBtn}
       </div>
     </div>
-    <div class="overflow-x-auto rounded-xl border border-slate-200">
-      <table class="w-full text-left border-collapse text-xs min-w-[580px]">
-        <thead><tr class="bg-slate-50 text-slate-500 uppercase text-[10px] font-extrabold border-b border-slate-200">
-          <th class="py-2.5 px-3 w-10 text-center">#</th><th class="py-2.5 px-3 w-28">Floor</th><th class="py-2.5 px-3">Item Checklist</th><th class="py-2.5 px-3 w-32">Status</th><th class="py-2.5 px-3 w-52">Notes</th>
-        </tr></thead>
-        <tbody class="divide-y divide-slate-100">${rowsHtml}</tbody>
-      </table>
-    </div>
+    <div class="space-y-2">${cardsHtml}</div>
   </div>`;
   document.getElementById('villaSubContent').insertAdjacentHTML('beforeend', paneHtml);
+  updateAllProgressCounters();
 }
 
 function switchVillaTab(vIdx) {
@@ -982,6 +1324,8 @@ function switchVillaTab(vIdx) {
 function removeVillaBlock(vIdx) {
   document.getElementById('vtab_btn_' + vIdx).remove();
   document.getElementById('vpane_' + vIdx).remove();
+  updateAllProgressCounters();
+  triggerAutoSave();
   switchVillaTab(1);
 }
 
@@ -990,10 +1334,10 @@ function addStaffRow(dept = 'FO', name = '', shift = 'Morning Shift') {
   const deptOpts = DEPT_ENUM.map(d => `<option value="${d}" ${d===dept?'selected':''}>${d}</option>`).join('');
   const shiftOpts = SHIFT_ENUM.map(s => `<option value="${s}" ${s===shift?'selected':''}>${s}</option>`).join('');
   const tr = `<tr>
-    <td class="p-2"><select class="staff-dept w-full bg-slate-50 border border-slate-200 rounded-lg p-2 font-bold text-[#17431f] outline-none">${deptOpts}</select></td>
-    <td class="p-2"><input type="text" value="${name}" placeholder="Nama karyawan..." class="staff-name w-full bg-slate-50 border border-slate-200 rounded-lg p-2 outline-none focus:bg-white focus:border-[#17431f]"></td>
-    <td class="p-2"><select class="staff-shift w-full bg-slate-50 border border-slate-200 rounded-lg p-2 outline-none">${shiftOpts}</select></td>
-    <td class="p-2 text-center"><button type="button" onclick="this.closest('tr').remove()" class="text-red-500 hover:bg-red-50 p-2 rounded-lg"><i class="fa-solid fa-trash"></i></button></td>
+    <td class="p-2"><select onchange="triggerAutoSave()" class="staff-dept w-full bg-slate-50 border border-slate-200 rounded-lg p-2 font-bold text-[#17431f] outline-none">${deptOpts}</select></td>
+    <td class="p-2"><input type="text" value="${escapeHtml(name)}" oninput="triggerAutoSave()" placeholder="Nama karyawan..." class="staff-name w-full bg-slate-50 border border-slate-200 rounded-lg p-2 outline-none focus:bg-white focus:border-[#17431f]"></td>
+    <td class="p-2"><select onchange="triggerAutoSave()" class="staff-shift w-full bg-slate-50 border border-slate-200 rounded-lg p-2 outline-none">${shiftOpts}</select></td>
+    <td class="p-2 text-center"><button type="button" onclick="this.closest('tr').remove(); triggerAutoSave();" class="text-red-500 hover:bg-red-50 p-2 rounded-lg"><i class="fa-solid fa-trash"></i></button></td>
   </tr>`;
   document.getElementById('staffTableBody').insertAdjacentHTML('beforeend', tr);
 }
@@ -1017,7 +1361,7 @@ function collectFormPayload() {
     if (nameEl) {
       villas.push({
         name: nameEl.value,
-        items: getSectionData(`V${v}`, 81)
+        items: getSectionData(`V${v}`, VILLA_ITEMS.length)
       });
     }
   }
@@ -1047,17 +1391,48 @@ function collectFormPayload() {
       ModPosition: document.getElementById('ModPosition').value
     },
     forecast,
-    pa: getSectionData('pa', 23),
-    boh: getSectionData('boh', 33),
-    rest: getSectionData('rest', 16),
+    pa: getSectionData('pa', PA_ITEMS.length),
+    boh: getSectionData('boh', BOH_ITEMS.length),
+    rest: getSectionData('rest', REST_ITEMS.length),
     villas,
     comments,
     staff
   };
 }
 
+function validateBeforeSave(payload) {
+  if (!payload.header.DayDate.trim() || !payload.header.ModName.trim()) {
+    alert('Day / Date dan MOD Name wajib diisi sebelum menyimpan.');
+    return false;
+  }
+
+  const missingNotes = [];
+  const checkItems = (arr, master, areaLabel) => {
+    (arr || []).forEach((it, idx) => {
+      if (it.status === 'Issue' && !String(it.notes || '').trim()) {
+        missingNotes.push(`• [${areaLabel}] ${master[idx] ? master[idx][1] : 'Item #' + (idx + 1)}`);
+      }
+    });
+  };
+
+  checkItems(payload.pa, PA_ITEMS, 'Public Area');
+  checkItems(payload.boh, BOH_ITEMS, 'BOH & Lobby');
+  checkItems(payload.rest, REST_ITEMS, 'Restaurant');
+  (payload.villas || []).forEach((v, idx) => {
+    checkItems(v.items, VILLA_ITEMS, v.name || `Villa #${idx + 1}`);
+  });
+
+  if (missingNotes.length > 0) {
+    const preview = missingNotes.slice(0, 5).join('\n') + (missingNotes.length > 5 ? `\n...dan ${missingNotes.length - 5} item lainnya.` : '');
+    return confirm(`Terdapat ${missingNotes.length} item berstatus "Issue" yang belum memiliki catatan (Notes):\n\n${preview}\n\nTetap simpan laporan tanpa catatan tersebut?`);
+  }
+  return true;
+}
+
 function handleSaveData() {
   const payload = collectFormPayload();
+  if (!validateBeforeSave(payload)) return;
+
   showLoader('Menyimpan Data & Merekam Issue...');
 
   google.script.run
@@ -1065,35 +1440,28 @@ function handleSaveData() {
       hideLoader();
       currentReportId = res.reportId;
       document.getElementById('badgeReportId').innerText = res.reportId;
-      document.getElementById('lastSavedLabel').innerText = 'Tersimpan: ' + res.lastUpdated;
-      refreshOpenIssueBadge();
+      document.getElementById('lastSavedLabel').innerText = 'Tersimpan di server: ' + res.lastUpdated;
+      discardLocalBackup();
+
+      google.script.run
+        .withSuccessHandler(issues => {
+          allIssuesList = issues || [];
+          const openCount = allIssuesList.filter(i => i.issueStatus === 'Open').length;
+          updateOpenIssueBadgeUI(openCount);
+        })
+        .getHistoryIssues();
+
       const extraMsg = res.issueCount > 0 ? `\nDitemukan ${res.issueCount} item "Issue" yang otomatis masuk ke menu History Issue.` : '';
       alert('Data berhasil disimpan! (ID: ' + currentReportId + ')' + extraMsg);
     })
     .withFailureHandler(err => {
       hideLoader();
-      alert('Gagal menyimpan data: ' + err.message);
+      alert('Gagal menyimpan data ke server (data aman tersimpan lokal di browser): ' + err.message);
     })
     .saveMODDraft(payload);
 }
 
 // ==================== HISTORY ISSUE & DISPATCH KE HOD ====================
-function refreshOpenIssueBadge() {
-  google.script.run
-    .withSuccessHandler(issues => {
-      allIssuesList = issues || [];
-      const openCount = allIssuesList.filter(i => i.issueStatus === 'Open').length;
-      const badge = document.getElementById('sidebarOpenIssueBadge');
-      if (openCount > 0) {
-        badge.innerText = openCount;
-        badge.classList.remove('hidden');
-      } else {
-        badge.classList.add('hidden');
-      }
-    })
-    .getHistoryIssues();
-}
-
 function loadHistoryIssues() {
   showLoader('Memuat Daftar History Issue...');
   google.script.run
@@ -1102,7 +1470,8 @@ function loadHistoryIssues() {
       selectedIssueIds.clear();
       document.getElementById('checkAllIssues').checked = false;
       renderIssuesTable();
-      refreshOpenIssueBadge();
+      const openCount = allIssuesList.filter(i => i.issueStatus === 'Open').length;
+      updateOpenIssueBadgeUI(openCount);
       hideLoader();
     })
     .withFailureHandler(err => {
@@ -1145,18 +1514,18 @@ function renderIssuesTable() {
 
     tbody.insertAdjacentHTML('beforeend', `<tr class="hover:bg-slate-50">
       <td class="py-3 px-3 text-center">
-        <input type="checkbox" ${isChecked} onchange="toggleSingleIssue('${it.issueId}', this.checked)" class="rounded border-slate-300 text-[#17431f] focus:ring-[#17431f]">
+        <input type="checkbox" ${isChecked} onchange="toggleSingleIssue('${escapeHtml(it.issueId)}', this.checked)" class="rounded border-slate-300 text-[#17431f] focus:ring-[#17431f]">
       </td>
       <td class="py-3 px-3">
-        <div class="font-bold text-slate-700">${it.dayDate}</div>
-        <div class="text-[10px] text-slate-400">MOD: ${it.modName}</div>
+        <div class="font-bold text-slate-700">${escapeHtml(it.dayDate)}</div>
+        <div class="text-[10px] text-slate-400">MOD: ${escapeHtml(it.modName)}</div>
       </td>
-      <td class="py-3 px-3"><span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold ${areaBadgeColor}">${it.areaCategory}</span></td>
-      <td class="py-3 px-3 font-bold text-slate-800">${it.subAreaUnit}</td>
-      <td class="py-3 px-3 font-medium text-slate-700">${it.itemChecklist}</td>
-      <td class="py-3 px-3 text-red-700 font-semibold">${it.notes}</td>
+      <td class="py-3 px-3"><span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold ${areaBadgeColor}">${escapeHtml(it.areaCategory)}</span></td>
+      <td class="py-3 px-3 font-bold text-slate-800">${escapeHtml(it.subAreaUnit)}</td>
+      <td class="py-3 px-3 font-medium text-slate-700">${escapeHtml(it.itemChecklist)}</td>
+      <td class="py-3 px-3 text-red-700 font-semibold">${escapeHtml(it.notes)}</td>
       <td class="py-3 px-3 text-center">
-        <button type="button" onclick="toggleIssueResolvedStatus('${it.issueId}', '${isResolved ? 'Open' : 'Resolved'}')" class="px-3 py-1 rounded-lg text-[10px] font-extrabold border transition ${isResolved ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-red-100 text-red-800 border-red-300'}">
+        <button type="button" onclick="toggleIssueResolvedStatus('${escapeHtml(it.issueId)}', '${isResolved ? 'Open' : 'Resolved'}')" class="px-3 py-1 rounded-lg text-[10px] font-extrabold border transition ${isResolved ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-red-100 text-red-800 border-red-300'}">
           ${isResolved ? '<i class="fa-solid fa-check mr-1"></i>Resolved' : '<i class="fa-solid fa-clock mr-1"></i>Open'}
         </button>
       </td>
@@ -1328,7 +1697,7 @@ function renderHistoryTable() {
   });
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400">Tidak ada data pada filter "${stFilter || 'Semua Status'}".</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400">Tidak ada data pada filter "${escapeHtml(stFilter || 'Semua Status')}".</td></tr>`;
     return;
   }
 
@@ -1337,24 +1706,24 @@ function renderHistoryTable() {
     const badge = r.statusDoc.includes('Sent') ? 'bg-blue-100 text-blue-800' : (isExported ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800');
     
     const emailBtn = isExported
-      ? `<button type="button" onclick="openEmailModal('${r.reportId}')" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-2.5 py-1.5 rounded-lg font-bold transition" title="Kirim PDF via Email"><i class="fa-solid fa-envelope"></i></button>`
+      ? `<button type="button" onclick="openEmailModal('${escapeHtml(r.reportId)}')" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-2.5 py-1.5 rounded-lg font-bold transition" title="Kirim PDF via Email"><i class="fa-solid fa-envelope"></i></button>`
       : `<button type="button" disabled class="bg-slate-100 text-slate-300 border border-slate-200 px-2.5 py-1.5 rounded-lg font-bold cursor-not-allowed" title="Export PDF terlebih dahulu untuk mengaktifkan Email"><i class="fa-solid fa-envelope"></i></button>`;
 
     tbody.insertAdjacentHTML('beforeend', `<tr class="hover:bg-slate-50">
-      <td class="py-3 px-4 font-bold text-slate-700">${r.reportId}</td>
-      <td class="py-3 px-4">${r.dayDate}</td>
-      <td class="py-3 px-4 font-semibold">${r.modName}</td>
-      <td class="py-3 px-4 text-slate-500">${r.villasChecked}</td>
-      <td class="py-3 px-4"><span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold ${badge}">${r.statusDoc}</span></td>
-      <td class="py-3 px-4 text-slate-400">${r.lastUpdated}</td>
+      <td class="py-3 px-4 font-bold text-slate-700">${escapeHtml(r.reportId)}</td>
+      <td class="py-3 px-4">${escapeHtml(r.dayDate)}</td>
+      <td class="py-3 px-4 font-semibold">${escapeHtml(r.modName)}</td>
+      <td class="py-3 px-4 text-slate-500">${escapeHtml(r.villasChecked)}</td>
+      <td class="py-3 px-4"><span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold ${badge}">${escapeHtml(r.statusDoc)}</span></td>
+      <td class="py-3 px-4 text-slate-400">${escapeHtml(r.lastUpdated)}</td>
       <td class="py-3 px-4 text-right space-x-1.5 whitespace-nowrap">
-        <button type="button" onclick="loadDraftToForm('${r.reportId}')" class="bg-slate-100 hover:bg-emerald-100 text-[#17431f] px-3 py-1.5 rounded-lg font-bold transition" title="Edit Checklist 1-8">
+        <button type="button" onclick="loadDraftToForm('${escapeHtml(r.reportId)}')" class="bg-slate-100 hover:bg-emerald-100 text-[#17431f] px-3 py-1.5 rounded-lg font-bold transition" title="Edit Checklist 1-8">
           <i class="fa-solid fa-pen-to-square mr-1"></i>Edit
         </button>
-        <button type="button" onclick="exportAllDataPDF('${r.reportId}')" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg font-bold transition" title="Export Semua Data Checklist 1-8 ke PDF">
+        <button type="button" onclick="exportAllDataPDF('${escapeHtml(r.reportId)}')" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg font-bold transition" title="Export Semua Data Checklist 1-8 ke PDF">
           <i class="fa-solid fa-file-pdf mr-1"></i>Export All Data PDF
         </button>
-        <button type="button" onclick="printReportPDF('${r.reportId}')" class="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-3 py-1.5 rounded-lg font-bold transition" title="Langsung ke Halaman Printer">
+        <button type="button" onclick="printReportPDF('${escapeHtml(r.reportId)}')" class="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-3 py-1.5 rounded-lg font-bold transition" title="Langsung ke Halaman Printer">
           <i class="fa-solid fa-print mr-1"></i>Print
         </button>
         ${emailBtn}
@@ -1441,48 +1810,54 @@ function base64ToBlobUrl(base64) {
   return URL.createObjectURL(blob);
 }
 
+function populateFormFromPayload(p, savedStatusText) {
+  isRestoringForm = true;
+  currentReportId = p.reportId || '';
+  currentPdfUrl = p.pdfUrl || '';
+  document.getElementById('badgeReportId').innerText = p.reportId || 'Draft Baru';
+  document.getElementById('lastSavedLabel').innerText = savedStatusText || '';
+
+  Object.entries(p.header || {}).forEach(([k, v]) => { if (document.getElementById(k)) document.getElementById(k).value = v; });
+  Object.entries(p.forecast || {}).forEach(([k, v]) => { if (document.getElementById(k)) document.getElementById(k).value = v; });
+  Object.entries(p.comments || {}).forEach(([k, v]) => { if (document.getElementById(k)) document.getElementById(k).value = v; });
+
+  const fillSection = (prefix, arr) => {
+    (arr || []).forEach((it, idx) => {
+      const inp = document.getElementById(`${prefix}_N${idx+1}`);
+      if (inp) inp.value = it.notes || '';
+      applyStatusVisual(prefix, idx + 1, it.status || '');
+    });
+  };
+  fillSection('pa', p.pa);
+  fillSection('boh', p.boh);
+  fillSection('rest', p.rest);
+
+  villaCount = 0;
+  document.getElementById('villaSubTabs').innerHTML = '';
+  document.getElementById('villaSubContent').innerHTML = '';
+  if (p.villas && p.villas.length > 0) {
+    p.villas.forEach(v => addVillaBlock(v.name, v.items));
+  } else {
+    addVillaBlock();
+    addVillaBlock();
+  }
+
+  document.getElementById('staffTableBody').innerHTML = '';
+  (p.staff || []).forEach(st => addStaffRow(st.dept, st.name, st.shift));
+
+  isRestoringForm = false;
+  updateAllProgressCounters();
+  openCatTab(1);
+}
+
 function loadDraftToForm(reportId) {
   showLoader('Membuka Draft Laporan...');
   google.script.run
     .withSuccessHandler(res => {
       hideLoader();
       if (!res || !res.payload) return alert('Data draft tidak ditemukan.');
-      const p = res.payload;
-
-      currentReportId = p.reportId;
-      currentPdfUrl = res.pdfUrl || '';
-      document.getElementById('badgeReportId').innerText = p.reportId;
-      document.getElementById('lastSavedLabel').innerText = 'Terakhir disimpan: ' + res.lastUpdated;
-
-      Object.entries(p.header || {}).forEach(([k, v]) => { if(document.getElementById(k)) document.getElementById(k).value = v; });
-      Object.entries(p.forecast || {}).forEach(([k, v]) => { if(document.getElementById(k)) document.getElementById(k).value = v; });
-      Object.entries(p.comments || {}).forEach(([k, v]) => { if(document.getElementById(k)) document.getElementById(k).value = v; });
-
-      const fillSection = (prefix, arr) => {
-        (arr || []).forEach((it, idx) => {
-          const sel = document.getElementById(`${prefix}_S${idx+1}`);
-          const inp = document.getElementById(`${prefix}_N${idx+1}`);
-          if (sel) { sel.value = it.status || ''; updateSelectColor(sel); }
-          if (inp) inp.value = it.notes || '';
-        });
-      };
-      fillSection('pa', p.pa);
-      fillSection('boh', p.boh);
-      fillSection('rest', p.rest);
-
-      villaCount = 0;
-      document.getElementById('villaSubTabs').innerHTML = '';
-      document.getElementById('villaSubContent').innerHTML = '';
-      if (p.villas && p.villas.length > 0) {
-        p.villas.forEach(v => addVillaBlock(v.name, v.items));
-      } else {
-        addVillaBlock(); addVillaBlock();
-      }
-
-      document.getElementById('staffTableBody').innerHTML = '';
-      (p.staff || []).forEach(st => addStaffRow(st.dept, st.name, st.shift));
-
-      openCatTab(1);
+      res.payload.pdfUrl = res.pdfUrl || '';
+      populateFormFromPayload(res.payload, 'Terakhir disimpan: ' + res.lastUpdated);
     })
     .withFailureHandler(err => {
       hideLoader();
