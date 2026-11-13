@@ -1,9 +1,10 @@
 // ==============================================================================
-// MOD REPORT SYSTEM - BACKEND (code.js) - PHASE 1: HARDENED & OPTIMIZED
+// MOD REPORT SYSTEM - BACKEND (code.js) - PHASE 2: HTML EMAIL TEMPLATES
 // Seahaven by Kamuela - Bali
 // ==============================================================================
 
 var TEMPLATE_DOC_ID = '1Wsb9mMfI1n7zQMW1TO1LzeWvoq82q4NaOkzhl0WN5Ns';
+var SEAHAVEN_LOGO_URL = 'https://lh3.googleusercontent.com/d/1Z0r9e7PQ8I99J-UrS9JmXYuavHFPgJN7';
 var REPORT_SHEET_NAME = 'MOD_Reports';
 var ISSUE_SHEET_NAME = 'MOD_Issues';
 
@@ -74,6 +75,14 @@ var VILLA_MASTER_ROWS = [
   ["2nd Floor", "Wooden Decorative Wall"], ["2nd Floor", "Back Villa Wall (wall facing to the main pool)"],
   ["2nd Floor", "All Lamp/Lighting"]
 ];
+
+function escapeXmlEmail(str) {
+  return String(str || '-')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
 
 /**
  * 1. Menampilkan Halaman Utama Web App
@@ -163,7 +172,7 @@ function checkHODLogin(username, password) {
 }
 
 /**
- * 2C. Single Bootstrap Endpoint (Untuk UI Phase 2 - Sekali Panggil Saat Masuk Dashboard)
+ * 2C. Single Bootstrap Endpoint
  */
 function getInitialDashboardData() {
   const issues = getHistoryIssues();
@@ -181,7 +190,7 @@ function getInitialDashboardData() {
 }
 
 /**
- * Ambil Daftar Email HOD dari Sheet Users_HOD untuk Preset Kirim Email
+ * Ambil Daftar Email HOD dari Sheet Users_HOD
  */
 function getHODEmailsList() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -286,7 +295,6 @@ function getReportPayloadById(reportId) {
 
 /**
  * 5. Simpan / Update Data Checklist 1-8 + Ekstrak Otomatis Item Berstatus "Issue" ke MOD_Issues
- *    Dilindungi LockService untuk mencegah data tumpang tindih.
  */
 function saveMODDraft(payload) {
   const lock = LockService.getScriptLock();
@@ -338,7 +346,6 @@ function saveMODDraft(payload) {
       sheet.appendRow(rowValues);
     }
 
-    // Sinkronisasi otomatis semua item dengan status "Issue" ke sheet MOD_Issues
     const issueCount = syncIssuesFromPayload(payload, now);
 
     return { status: 'Success', reportId: payload.reportId, lastUpdated: now, issueCount: issueCount };
@@ -350,7 +357,7 @@ function saveMODDraft(payload) {
 }
 
 /**
- * Sinkronisasi Item Berstatus "Issue" ke Sheet MOD_Issues (Safe Incremental Update)
+ * Sinkronisasi Item Berstatus "Issue" ke Sheet MOD_Issues
  */
 function syncIssuesFromPayload(payload, timestamp) {
   const issueSheet = getOrCreateIssueSheet();
@@ -358,7 +365,6 @@ function syncIssuesFromPayload(payload, timestamp) {
   const existingStatusMap = {};
   const keepRows = [];
 
-  // Pisahkan baris milik report lain agar tidak terhapus, dan simpan status Resolved untuk report ini
   if (lastRow > 1) {
     const oldData = issueSheet.getRange(2, 1, lastRow - 1, 10).getValues();
     oldData.forEach(r => {
@@ -390,25 +396,21 @@ function syncIssuesFromPayload(payload, timestamp) {
     }
   };
 
-  // 1. Public Area
   (payload.pa || []).forEach((it, idx) => {
     const m = PA_MASTER_ROWS[idx] || ['PUBLIC AREA', 'Item #' + (idx + 1)];
     pushIfIssue('Public Area Issue', m[0], m[1], it, `PA-${idx + 1}`);
   });
 
-  // 2. BOH & Lobby Area
   (payload.boh || []).forEach((it, idx) => {
     const m = BOH_MASTER_ROWS[idx] || ['BOH & LOBBY', 'Item #' + (idx + 1)];
     pushIfIssue('BOH & Lobby Area Issue', m[0], m[1], it, `BOH-${idx + 1}`);
   });
 
-  // 3. Restaurant
   (payload.rest || []).forEach((it, idx) => {
     const m = REST_MASTER_ROWS[idx] || ['RESTAURANT', 'Item #' + (idx + 1)];
     pushIfIssue('Restaurant Issue', m[0], m[1], it, `REST-${idx + 1}`);
   });
 
-  // 4. Villa Checklist
   (payload.villas || []).forEach((v, vIdx) => {
     const vName = v.name || `Villa #${vIdx + 1}`;
     (v.items || []).forEach((it, idx) => {
@@ -419,7 +421,6 @@ function syncIssuesFromPayload(payload, timestamp) {
 
   const combinedRows = keepRows.concat(newIssues);
 
-  // Tulis ulang baris data secara utuh dan bersih
   if (lastRow > 1) {
     issueSheet.getRange(2, 1, lastRow - 1, 10).clearContent();
   }
@@ -431,7 +432,7 @@ function syncIssuesFromPayload(payload, timestamp) {
 }
 
 /**
- * Ambil Semua Data History Issue untuk Menu Sidebar "History Issue"
+ * Ambil Semua Data History Issue
  */
 function getHistoryIssues() {
   const sheet = getOrCreateIssueSheet();
@@ -459,7 +460,7 @@ function getHistoryIssues() {
 }
 
 /**
- * Update Status Tindak Lanjut Issue (Open <-> Resolved) dengan LockService
+ * Update Status Tindak Lanjut Issue (Open <-> Resolved)
  */
 function updateIssueStatus(issueId, newStatus) {
   const lock = LockService.getScriptLock();
@@ -483,19 +484,18 @@ function updateIssueStatus(issueId, newStatus) {
 }
 
 /**
- * Helper Keamanan Sharing Drive File (Batasi ke Domain Internal Seahaven)
+ * Helper Keamanan Sharing Drive File
  */
 function applyInternalDriveSharing(file) {
   try {
     file.setSharing(DriveApp.Access.DOMAIN_WITH_LINK, DriveApp.Permission.VIEW);
   } catch (e) {
-    // Fallback jika dijalankan dari akun non-Google Workspace (tetap Restricted ke internal folder)
     console.warn('DOMAIN_WITH_LINK tidak didukung pada akun ini, menggunakan izin default folder.');
   }
 }
 
 /**
- * Export PDF Khusus Rekap Issue Terpilih & Kembalikan Base64 + URL Drive
+ * Export PDF Khusus Rekap Issue Terpilih
  */
 function generateIssuePDFReport(selectedIssues, areaFilterLabel) {
   if (!selectedIssues || selectedIssues.length === 0) {
@@ -516,7 +516,6 @@ function generateIssuePDFReport(selectedIssues, areaFilterLabel) {
   const body = doc.getBody();
   body.setMarginTop(36).setMarginBottom(36).setMarginLeft(36).setMarginRight(36);
 
-  // Header Dokumen Seahaven
   const headerTitle = body.appendParagraph('SEAHAVEN VILLAS BY KAMUELA');
   headerTitle.setHeading(DocumentApp.ParagraphHeading.HEADING1);
   headerTitle.editAsText().setForegroundColor('#17431f').setBold(true).setFontSize(16);
@@ -529,7 +528,6 @@ function generateIssuePDFReport(selectedIssues, areaFilterLabel) {
   );
   metaPara.editAsText().setForegroundColor('#475569').setFontSize(9);
 
-  // Tabel Rekap Issue
   const tableRows = [
     ['NO', 'DATE / MOD', 'AREA CATEGORY', 'LOCATION / UNIT', 'ITEM CHECKLIST', 'ISSUE NOTES', 'STATUS']
   ];
@@ -588,20 +586,112 @@ function generateIssuePDFReport(selectedIssues, areaFilterLabel) {
 }
 
 /**
- * Kirim PDF Rekap Issue via Email ke HOD (Engineering / Housekeeping / All HOD)
+ * Helper: Build HTML Email Template untuk Rekap Issue HOD
+ */
+function buildIssueEmailHtml(pdfUrl, subjectTitle, customMessage, issueRows) {
+  const generatedTime = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'EEEE, dd MMM yyyy • HH:mm');
+  const noteHtml = customMessage
+    ? `<div style="background:#f8fafc;border-left:4px solid #17431f;padding:12px 14px;border-radius:6px;margin-bottom:18px;font-size:13px;color:#334155;line-height:1.5;">${escapeXmlEmail(customMessage).replace(/\n/g, '<br>')}</div>`
+    : '';
+
+  let rowsHtml = '';
+  (issueRows || []).slice(0, 15).forEach((it, idx) => {
+    const bg = idx % 2 === 1 ? '#f8fafc' : '#ffffff';
+    rowsHtml += `
+      <tr style="background:${bg};">
+        <td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;font-size:12px;color:#475569;text-align:center;">${idx + 1}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;font-size:12px;color:#1e293b;font-weight:bold;">${escapeXmlEmail(it.subAreaUnit)}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;font-size:12px;color:#334155;">${escapeXmlEmail(it.itemChecklist)}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;font-size:12px;color:#b91c1c;font-weight:600;">${escapeXmlEmail(it.notes)}</td>
+      </tr>
+    `;
+  });
+
+  const tableSection = (issueRows && issueRows.length > 0) ? `
+    <h3 style="margin:18px 0 8px 0;font-size:13px;color:#991b1b;text-transform:uppercase;letter-spacing:0.5px;">Ringkasan Temuan Issue (${issueRows.length} Item)</h3>
+    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
+      <thead>
+        <tr style="background:#17431f;color:#ffffff;font-size:11px;text-transform:uppercase;">
+          <th style="padding:8px 10px;text-align:center;width:32px;">No</th>
+          <th style="padding:8px 10px;text-align:left;">Lokasi / Unit</th>
+          <th style="padding:8px 10px;text-align:left;">Item Checklist</th>
+          <th style="padding:8px 10px;text-align:left;">Catatan Issue</th>
+        </tr>
+      </thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>
+  ` : '';
+
+  return `
+  <div style="background-color:#f1f5f9;padding:24px 12px;font-family:'Segoe UI',Arial,sans-serif;color:#1e293b;">
+    <table width="100%" max-width="640" align="center" cellpadding="0" cellspacing="0" style="max-width:640px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #cbd5e1;box-shadow:0 4px 12px rgba(0,0,0,0.06);">
+      <!-- HEADER LOGO -->
+      <tr>
+        <td style="background:#f5faf8;padding:22px 24px;text-align:center;border-bottom:3px solid #17431f;">
+          <img src="${SEAHAVEN_LOGO_URL}" alt="Seahaven Villas by Kamuela" style="height:56px;width:auto;margin-bottom:8px;">
+          <div style="font-size:11px;font-weight:800;color:#17431f;letter-spacing:1.5px;text-transform:uppercase;">MOD ISSUE &amp; DEFECT FOLLOW-UP REPORT</div>
+        </td>
+      </tr>
+      <!-- INFO META -->
+      <tr>
+        <td style="padding:22px 24px;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 16px;margin-bottom:16px;">
+            <tr>
+              <td style="font-size:12px;color:#7f1d1d;padding-bottom:4px;"><strong>Perihal:</strong> ${escapeXmlEmail(subjectTitle)}</td>
+            </tr>
+            <tr>
+              <td style="font-size:12px;color:#991b1b;"><strong>Waktu Kirim:</strong> ${escapeXmlEmail(generatedTime)} WITA</td>
+            </tr>
+          </table>
+
+          ${noteHtml}
+          ${tableSection}
+
+          <!-- TOMBOL PDF -->
+          <div style="text-align:center;margin:26px 0 10px 0;">
+            <a href="${pdfUrl}" target="_blank" style="display:inline-block;background-color:#17431f;color:#ffffff;text-decoration:none;font-weight:bold;font-size:13px;padding:12px 26px;border-radius:10px;">
+              &#128196; Buka Dokumen Lengkap Issue (PDF)
+            </a>
+            <p style="font-size:11px;color:#64748b;margin-top:8px;">File PDF resmi juga telah dilampirkan langsung pada email ini.</p>
+          </div>
+        </td>
+      </tr>
+      <!-- FOOTER -->
+      <tr>
+        <td style="background:#0b2210;color:#a7f3d0;text-align:center;padding:14px 20px;font-size:11px;">
+          Seahaven Villas by Kamuela • Bali &mdash; Internal Operational System
+        </td>
+      </tr>
+    </table>
+  </div>`;
+}
+
+/**
+ * Kirim PDF Rekap Issue via Email ke HOD dengan HTML Template
  */
 function sendIssueReportEmail(pdfFileId, recipientEmail, ccEmail, subjectTitle, customMessage) {
   if (!pdfFileId) throw new Error('File PDF Issue belum tersedia.');
   const pdfFile = DriveApp.getFileById(pdfFileId);
+  const pdfUrl = pdfFile.getUrl();
+
+  // Ambil daftar issue Open terbaru untuk ringkasan tabel di badan email
+  const openIssues = getHistoryIssues().filter(i => i.issueStatus === 'Open');
+  const htmlBody = buildIssueEmailHtml(
+    pdfUrl,
+    subjectTitle || 'MOD Issue Follow-Up Report - Seahaven',
+    customMessage || 'Dear HOD Team,\n\nTerlampir adalah daftar temuan MOD Issue Checklist yang memerlukan tindak lanjut dari departemen terkait.',
+    openIssues
+  );
 
   const mailOptions = {
     attachments: [pdfFile.getAs(MimeType.PDF)],
-    name: 'Seahaven Villas - MOD Issue Tracker'
+    name: 'Seahaven Villas - MOD Issue Tracker',
+    htmlBody: htmlBody
   };
   if (ccEmail) mailOptions.cc = ccEmail;
 
-  const bodyText = customMessage || `Dear HOD Team,\n\nTerlampir adalah daftar temuan MOD Issue Checklist yang memerlukan tindak lanjut dari departemen terkait.\n\nTerima kasih,\nMOD Seahaven Villas`;
-  GmailApp.sendEmail(recipientEmail, subjectTitle || 'MOD Issue Follow-Up Report - Seahaven', bodyText, mailOptions);
+  const plainBody = customMessage || `Dear HOD Team,\n\nTerlampir adalah daftar temuan MOD Issue Checklist.\nLink PDF: ${pdfUrl}\n\nTerima kasih,\nMOD Seahaven Villas`;
+  GmailApp.sendEmail(recipientEmail, subjectTitle || 'MOD Issue Follow-Up Report - Seahaven', plainBody, mailOptions);
 
   return { status: 'Success' };
 }
@@ -791,20 +881,251 @@ function populateStaffTableFast(table, staffList) {
   });
 }
 
+/**
+ * Helper: Build HTML Email Template Lengkap untuk Laporan MOD Harian
+ */
+function buildMODReportEmailHtml(reportId, payload, pdfUrl, customMessage) {
+  const h = (payload && payload.header) ? payload.header : {};
+  const fc = (payload && payload.forecast) ? payload.forecast : {};
+  const com = (payload && payload.comments) ? payload.comments : {};
+
+  // Hitung ringkasan status Good / Pending / Issue di semua kategori
+  const countStats = (arr) => {
+    let good = 0, pending = 0, issue = 0;
+    (arr || []).forEach(it => {
+      if (it.status === 'Good') good++;
+      else if (it.status === 'Pending') pending++;
+      else if (it.status === 'Issue') issue++;
+    });
+    return { good, pending, issue };
+  };
+
+  const sPA = countStats(payload ? payload.pa : []);
+  const sBOH = countStats(payload ? payload.boh : []);
+  const sRest = countStats(payload ? payload.rest : []);
+
+  let vGood = 0, vPending = 0, vIssue = 0;
+  const villaNames = [];
+  (payload && payload.villas ? payload.villas : []).forEach(v => {
+    if (v.name) villaNames.push(v.name);
+    const st = countStats(v.items);
+    vGood += st.good;
+    vPending += st.pending;
+    vIssue += st.issue;
+  });
+
+  // Kumpulkan daftar temuan Issue untuk ditampilkan di email
+  const issueItems = [];
+  const collectIssues = (arr, master, areaName) => {
+    (arr || []).forEach((it, idx) => {
+      if (it.status === 'Issue') {
+        const m = master[idx] || ['', 'Item #' + (idx + 1)];
+        issueItems.push({ area: areaName, item: m[1], notes: it.notes || '-' });
+      }
+    });
+  };
+  if (payload) {
+    collectIssues(payload.pa, PA_MASTER_ROWS, 'Public Area');
+    collectIssues(payload.boh, BOH_MASTER_ROWS, 'BOH & Lobby');
+    collectIssues(payload.rest, REST_MASTER_ROWS, 'Restaurant');
+    (payload.villas || []).forEach((v, vIdx) => {
+      collectIssues(v.items, VILLA_MASTER_ROWS, v.name || `Villa #${vIdx + 1}`);
+    });
+  }
+
+  let issueListHtml = '';
+  if (issueItems.length === 0) {
+    issueListHtml = `<div style="background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;padding:10px 14px;border-radius:8px;font-size:12px;font-weight:600;">&#9989; Tidak ada temuan Issue (seluruh area inspeksi dalam kondisi baik).</div>`;
+  } else {
+    const rows = issueItems.map((it, idx) => `
+      <tr style="background:${idx % 2 === 1 ? '#fff5f5' : '#ffffff'};">
+        <td style="padding:7px 10px;border-bottom:1px solid #fee2e2;font-size:12px;font-weight:bold;color:#991b1b;">${escapeXmlEmail(it.area)}</td>
+        <td style="padding:7px 10px;border-bottom:1px solid #fee2e2;font-size:12px;color:#1e293b;">${escapeXmlEmail(it.item)}</td>
+        <td style="padding:7px 10px;border-bottom:1px solid #fee2e2;font-size:12px;color:#b91c1c;">${escapeXmlEmail(it.notes)}</td>
+      </tr>
+    `).join('');
+
+    issueListHtml = `
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #fecaca;border-radius:8px;overflow:hidden;">
+        <thead>
+          <tr style="background:#991b1b;color:#ffffff;font-size:11px;text-transform:uppercase;">
+            <th style="padding:7px 10px;text-align:left;">Area / Unit</th>
+            <th style="padding:7px 10px;text-align:left;">Item Temuan</th>
+            <th style="padding:7px 10px;text-align:left;">Catatan MOD</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+
+  const customNoteBlock = customMessage
+    ? `<div style="background:#f8fafc;border-left:4px solid #17431f;padding:12px 14px;border-radius:6px;margin-bottom:18px;font-size:13px;color:#334155;line-height:1.5;">${escapeXmlEmail(customMessage).replace(/\n/g, '<br>')}</div>`
+    : '';
+
+  return `
+  <div style="background-color:#f1f5f9;padding:24px 12px;font-family:'Segoe UI',Arial,sans-serif;color:#1e293b;">
+    <table width="100%" max-width="650" align="center" cellpadding="0" cellspacing="0" style="max-width:650px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #cbd5e1;box-shadow:0 4px 14px rgba(0,0,0,0.06);">
+      
+      <!-- 1. HEADER LOGO SEAHAVEN -->
+      <tr>
+        <td style="background:#f5faf8;padding:24px;text-align:center;border-bottom:3px solid #17431f;">
+          <img src="${SEAHAVEN_LOGO_URL}" alt="Seahaven Villas by Kamuela" style="height:60px;width:auto;margin-bottom:8px;">
+          <div style="font-size:11px;font-weight:800;color:#17431f;letter-spacing:1.8px;text-transform:uppercase;">MANAGER ON DUTY (MOD) DAILY REPORT</div>
+          <div style="font-size:11px;color:#64748b;margin-top:3px;">Report ID: <strong>${escapeXmlEmail(reportId)}</strong></div>
+        </td>
+      </tr>
+
+      <tr>
+        <td style="padding:24px;">
+          <!-- 2. INFORMASI HOD / MOD & HARI TANGGAL -->
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#edfff1;border:1px solid #bbf7d0;border-radius:12px;padding:14px 16px;margin-bottom:18px;">
+            <tr>
+              <td width="50%" style="padding:4px 6px;font-size:12px;color:#14532d;">
+                <span style="font-size:10px;text-transform:uppercase;color:#166534;display:block;font-weight:bold;">MOD / HOD On Duty</span>
+                <strong style="font-size:14px;">${escapeXmlEmail(h.ModName)}</strong> (${escapeXmlEmail(h.ModPosition)})
+              </td>
+              <td width="50%" style="padding:4px 6px;font-size:12px;color:#14532d;">
+                <span style="font-size:10px;text-transform:uppercase;color:#166534;display:block;font-weight:bold;">Day / Date &amp; Shift</span>
+                <strong style="font-size:13px;">${escapeXmlEmail(h.DayDate)}</strong><br>
+                <span style="font-size:11px;">Shift: ${escapeXmlEmail(h.Time)}</span>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="2" style="padding:8px 6px 2px 6px;border-top:1px dashed #86efac;font-size:12px;color:#14532d;">
+                <strong>Villas Inspected:</strong> ${escapeXmlEmail(villaNames.length > 0 ? villaNames.join(', ') : '-')}
+              </td>
+            </tr>
+          </table>
+
+          ${customNoteBlock}
+
+          <!-- 3. SUMMARY OCCUPANCY & FORECAST -->
+          <h3 style="margin:0 0 8px 0;font-size:12px;color:#17431f;text-transform:uppercase;letter-spacing:0.6px;">A. Occupancy &amp; Revenue Summary</h3>
+          <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #e2e8f0;margin-bottom:18px;font-size:12px;">
+            <thead>
+              <tr style="background:#f8fafc;color:#475569;font-size:11px;text-transform:uppercase;">
+                <th style="padding:8px 10px;border-bottom:1px solid #e2e8f0;text-align:left;">Period</th>
+                <th style="padding:8px 10px;border-bottom:1px solid #e2e8f0;text-align:right;">Occupancy</th>
+                <th style="padding:8px 10px;border-bottom:1px solid #e2e8f0;text-align:right;">Room Sold</th>
+                <th style="padding:8px 10px;border-bottom:1px solid #e2e8f0;text-align:right;">ARR</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;font-weight:bold;">Last Night</td>
+                <td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;text-align:right;">${escapeXmlEmail(fc.LastOcc)}</td>
+                <td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;text-align:right;">${escapeXmlEmail(fc.LastRoom)}</td>
+                <td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;text-align:right;">${escapeXmlEmail(fc.LastARR)}</td>
+              </tr>
+              <tr style="background:#f8fafc;">
+                <td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;font-weight:bold;">Today's Forecast</td>
+                <td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;text-align:right;">${escapeXmlEmail(fc.TodOcc)}</td>
+                <td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;text-align:right;">${escapeXmlEmail(fc.TodRoom)}</td>
+                <td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;text-align:right;">${escapeXmlEmail(fc.TodARR)}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;font-weight:bold;">Tomorrow Forecast</td>
+                <td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;text-align:right;">${escapeXmlEmail(fc.TomOcc)}</td>
+                <td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;text-align:right;">${escapeXmlEmail(fc.TomRoom)}</td>
+                <td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;text-align:right;">${escapeXmlEmail(fc.TomARR)}</td>
+              </tr>
+              <tr style="background:#f0fdf4;">
+                <td colspan="2" style="padding:8px 10px;font-size:11px;"><strong>F&amp;B Cover / Rev:</strong> ${escapeXmlEmail(fc.FBCover)} / ${escapeXmlEmail(fc.FBRev)}</td>
+                <td colspan="2" style="padding:8px 10px;font-size:11px;text-align:right;"><strong>VIP Welcome:</strong> ${escapeXmlEmail(fc.VIPWelcome)}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- 4. SUMMARY HASIL INSPEKSI CHECKLIST -->
+          <h3 style="margin:0 0 8px 0;font-size:12px;color:#17431f;text-transform:uppercase;letter-spacing:0.6px;">B. Inspection Checklist Summary</h3>
+          <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #e2e8f0;margin-bottom:18px;font-size:12px;">
+            <thead>
+              <tr style="background:#17431f;color:#ffffff;font-size:11px;text-transform:uppercase;">
+                <th style="padding:8px 10px;text-align:left;">Area Inspeksi</th>
+                <th style="padding:8px 10px;text-align:center;">Good</th>
+                <th style="padding:8px 10px;text-align:center;">Pending</th>
+                <th style="padding:8px 10px;text-align:center;">Issue</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;font-weight:600;">Public &amp; General Area</td>
+                <td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;text-align:center;color:#166534;font-weight:bold;">${sPA.good}</td>
+                <td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;text-align:center;color:#b45309;font-weight:bold;">${sPA.pending}</td>
+                <td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;text-align:center;color:#dc2626;font-weight:bold;">${sPA.issue}</td>
+              </tr>
+              <tr style="background:#f8fafc;">
+                <td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;font-weight:600;">BOH &amp; Lobby Area</td>
+                <td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;text-align:center;color:#166534;font-weight:bold;">${sBOH.good}</td>
+                <td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;text-align:center;color:#b45309;font-weight:bold;">${sBOH.pending}</td>
+                <td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;text-align:center;color:#dc2626;font-weight:bold;">${sBOH.issue}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;font-weight:600;">Restaurant (Kitchen &amp; Bar)</td>
+                <td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;text-align:center;color:#166534;font-weight:bold;">${sRest.good}</td>
+                <td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;text-align:center;color:#b45309;font-weight:bold;">${sRest.pending}</td>
+                <td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;text-align:center;color:#dc2626;font-weight:bold;">${sRest.issue}</td>
+              </tr>
+              <tr style="background:#f8fafc;">
+                <td style="padding:8px 10px;font-weight:600;">Villa Inspection (${villaNames.length} Unit)</td>
+                <td style="padding:8px 10px;text-align:center;color:#166534;font-weight:bold;">${vGood}</td>
+                <td style="padding:8px 10px;text-align:center;color:#b45309;font-weight:bold;">${vPending}</td>
+                <td style="padding:8px 10px;text-align:center;color:#dc2626;font-weight:bold;">${vIssue}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- 5. RINCIAN TEMUAN ISSUE & CATATAN PENTING -->
+          <h3 style="margin:0 0 8px 0;font-size:12px;color:#991b1b;text-transform:uppercase;letter-spacing:0.6px;">C. Highlight Issues &amp; Operational Notes</h3>
+          ${issueListHtml}
+
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;font-size:12px;">
+            <tr><td style="padding:3px 0;"><strong>Guest Comments:</strong> ${escapeXmlEmail(com.GuestCom)}</td></tr>
+            <tr><td style="padding:3px 0;"><strong>General Observation:</strong> ${escapeXmlEmail(com.GenObs)}</td></tr>
+            <tr><td style="padding:3px 0;"><strong>Utilities (GWT / PLN 53 / PLN 192):</strong> ${escapeXmlEmail(com.GWT_Level)} | ${escapeXmlEmail(com.PLN_53)} | ${escapeXmlEmail(com.PLN_192)}</td></tr>
+          </table>
+
+          <!-- 6. TOMBOL LINK PDF LENGKAP -->
+          <div style="text-align:center;margin:28px 0 8px 0;">
+            <a href="${pdfUrl}" target="_blank" style="display:inline-block;background-color:#17431f;color:#ffffff;text-decoration:none;font-weight:bold;font-size:13px;padding:13px 28px;border-radius:10px;box-shadow:0 3px 8px rgba(23,67,31,0.25);">
+              &#128196; Lihat Seluruh Rincian Laporan (PDF)
+            </a>
+            <p style="font-size:11px;color:#64748b;margin-top:8px;">Klik tombol di atas untuk membuka file PDF di Google Drive, atau buka lampiran PDF pada email ini.</p>
+          </div>
+        </td>
+      </tr>
+
+      <!-- FOOTER -->
+      <tr>
+        <td style="background:#0b2210;color:#a7f3d0;text-align:center;padding:14px 20px;font-size:11px;">
+          Seahaven Villas by Kamuela • Bali &mdash; Automated MOD Report System
+        </td>
+      </tr>
+    </table>
+  </div>`;
+}
+
+/**
+ * Kirim Laporan MOD Utama via Email dengan HTML Template Lengkap
+ */
 function sendReportEmail(reportId, recipientEmail, ccEmail, customMessage) {
   const sheet = getOrCreateReportSheet();
   const lastRow = sheet.getLastRow();
   let pdfUrl = '';
   let reportTitle = reportId;
   let targetRow = -1;
+  let payload = null;
 
   if (lastRow > 1) {
-    const rows = sheet.getRange(2, 1, lastRow - 1, 9).getDisplayValues();
+    const rows = sheet.getRange(2, 1, lastRow - 1, 10).getDisplayValues();
     for (let i = 0; i < rows.length; i++) {
       if (rows[i][0] === reportId) {
         targetRow = i + 2;
         pdfUrl = rows[i][8];
         reportTitle = `MOD Report - ${rows[i][1]} (${rows[i][3]})`;
+        const rawJson = sheet.getRange(targetRow, 10).getValue();
+        payload = rawJson ? JSON.parse(rawJson) : null;
         break;
       }
     }
@@ -818,14 +1139,17 @@ function sendReportEmail(reportId, recipientEmail, ccEmail, customMessage) {
   const fileId = match ? match[0] : '';
   const pdfFile = DriveApp.getFileById(fileId);
 
+  const htmlBody = buildMODReportEmailHtml(reportId, payload, pdfUrl, customMessage);
+  const plainBody = customMessage || `Dear Team,\n\nTerlampir adalah laporan MOD Report Checklist untuk Seahaven Villas (${reportTitle}).\nBuka PDF Lengkap: ${pdfUrl}\n\nTerima kasih.`;
+
   const mailOptions = {
     attachments: [pdfFile.getAs(MimeType.PDF)],
-    name: 'Seahaven Villas - MOD System'
+    name: 'Seahaven Villas - MOD System',
+    htmlBody: htmlBody
   };
   if (ccEmail) mailOptions.cc = ccEmail;
 
-  const bodyText = customMessage || `Dear Team,\n\nTerlampir adalah laporan MOD Report Checklist untuk Seahaven Villas (${reportTitle}).\n\nTerima kasih.`;
-  GmailApp.sendEmail(recipientEmail, reportTitle, bodyText, mailOptions);
+  GmailApp.sendEmail(recipientEmail, reportTitle, plainBody, mailOptions);
 
   if (targetRow > 0) {
     sheet.getRange(targetRow, 6).setValue('Sent via Email');
