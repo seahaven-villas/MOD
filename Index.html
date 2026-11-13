@@ -1,0 +1,1522 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>MOD Report System - Seahaven</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .status-Good { background-color: #dcfce7 !important; color: #166534 !important; border-color: #86efac !important; font-weight: 700; }
+    .status-Pending { background-color: #fef9c3 !important; color: #854d0e !important; border-color: #fde047 !important; font-weight: 700; }
+    .status-Issue { background-color: #fee2e2 !important; color: #991b1b !important; border-color: #fca5a5 !important; font-weight: 700; }
+  </style>
+</head>
+<body class="bg-[#0b2210] min-h-screen font-sans text-slate-800 flex items-center justify-center relative overflow-x-hidden">
+
+  <!-- GLOBAL LOADING OVERLAY -->
+  <div id="globalLoader" class="hidden fixed inset-0 bg-[#0b2210]/85 backdrop-blur-sm z-[100] flex flex-col items-center justify-center text-white">
+    <i class="fa-solid fa-circle-notch fa-spin text-4xl text-emerald-400 mb-3"></i>
+    <p id="globalLoaderText" class="text-xs font-bold tracking-wider uppercase">Memproses...</p>
+  </div>
+
+  <!-- ==================== SCREEN 1: CARD LOGIN ==================== -->
+  <div id="loginScreen" class="w-full max-w-md p-4 z-50">
+    <div class="bg-[#edfff1] border border-[#17431f]/40 rounded-3xl shadow-2xl overflow-hidden">
+      <div class="bg-[#f5faf8] p-6 text-center border-b border-slate-200 flex flex-col items-center justify-center">
+        <img src="https://lh3.googleusercontent.com/d/1Z0r9e7PQ8I99J-UrS9JmXYuavHFPgJN7" alt="Seahaven Villas Logo" class="h-16 md:h-20 w-auto object-contain mb-2">
+        <p class="text-[10px] text-[#17431f] uppercase tracking-widest font-extrabold">MOD CHECKLIST REPORT SYSTEM</p>
+      </div>
+
+      <div class="p-6 md:p-8 space-y-4 bg-white rounded-t-3xl -mt-4">
+        <div class="text-center">
+          <h2 class="text-xl font-extrabold text-slate-800">Sign in</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Choose how you sign in to Seahaven MOD Portal</p>
+        </div>
+
+        <div id="loginAlert" class="hidden text-xs text-red-600 bg-red-50 p-2.5 rounded-xl border border-red-200 text-center font-medium"></div>
+
+        <button type="button" id="btnGoogleLogin" onclick="handleGoogleLogin()" class="w-full flex items-center justify-between px-4 py-3 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl shadow-sm transition group">
+          <div class="flex items-center gap-3">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" class="w-5 h-5">
+            <span class="text-xs font-bold text-slate-700 group-hover:text-[#17431f]" id="googleBtnLabel">Sign in with Google Official</span>
+          </div>
+          <span class="text-[10px] font-bold bg-slate-100 text-slate-500 px-2.5 py-1 rounded-lg">Workspace</span>
+        </button>
+
+        <button type="button" onclick="toggleManualLoginForm()" class="w-full flex items-center justify-between px-4 py-3 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl shadow-sm transition">
+          <div class="flex items-center gap-3">
+            <i class="fa-solid fa-key text-slate-400 w-5 text-center text-sm"></i>
+            <span class="text-xs font-bold text-slate-700">Continue with Username & Password</span>
+          </div>
+          <i id="manualToggleIcon" class="fa-solid fa-chevron-right text-slate-400 text-xs transition-transform"></i>
+        </button>
+
+        <form id="loginForm" onsubmit="handleLogin(event)" class="hidden space-y-3 pt-2 border-t border-slate-100">
+          <div>
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Username / ID</label>
+            <div class="relative">
+              <i class="fa-solid fa-user text-slate-400 absolute left-3.5 top-3 text-xs"></i>
+              <input type="text" id="loginUsername" required placeholder="Username" class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:border-[#17431f] outline-none transition">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Password</label>
+            <div class="relative">
+              <i class="fa-solid fa-lock text-slate-400 absolute left-3.5 top-3 text-xs"></i>
+              <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:border-[#17431f] outline-none transition">
+            </div>
+          </div>
+
+          <button type="submit" id="btnLogin" class="w-full bg-[#17431f] hover:bg-[#103016] text-white font-bold py-3 rounded-xl transition shadow-lg shadow-[#17431f]/30 text-xs flex items-center justify-center gap-2">
+            <i class="fa-solid fa-right-to-bracket"></i> Sign In to System
+          </button>
+        </form>
+
+        <div class="pt-3 border-t border-slate-100 text-center">
+          <p class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">INTERNAL USE ONLY • SEAHAVEN VILLA</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SCREEN 2: DASHBOARD FORM MOD ==================== -->
+  <div id="appScreen" class="hidden w-full min-h-screen bg-slate-50 flex flex-col md:flex-row">
+    
+    <!-- BACKDROP MOBILE SLIDE DRAWER -->
+    <div id="sidebarBackdrop" onclick="closeSidebarMobile()" class="fixed inset-0 bg-[#07160a]/70 z-40 hidden md:hidden backdrop-blur-sm transition-opacity duration-300"></div>
+
+    <!-- SIDEBAR NAVIGATION -->
+    <aside id="sidebar" class="fixed top-0 left-0 bottom-0 w-72 md:w-64 bg-[#0b2210] text-white flex flex-col justify-between p-4 flex-shrink-0 shadow-2xl md:shadow-xl z-50 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out md:static border-r border-[#17431f]/30 overflow-y-auto">
+      <div>
+        <div class="flex items-center justify-between p-2 mb-4 border-b border-[#17431f]/50 pb-3">
+          <div class="flex items-center gap-3">
+            <div class="bg-[#17431f] p-2.5 rounded-xl font-bold text-lg shadow-lg shadow-[#17431f]/40"><i class="fa-solid fa-hotel text-white"></i></div>
+            <div>
+              <h1 class="font-bold text-sm tracking-widest uppercase text-emerald-400">Seahaven</h1>
+              <p class="text-[10px] text-emerald-200/60 uppercase tracking-wider">MOD Portal System</p>
+            </div>
+          </div>
+          <button type="button" onclick="closeSidebarMobile()" class="md:hidden text-slate-400 hover:text-white p-2 text-lg"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <nav class="space-y-1.5">
+          <!-- MENU 1: INPUT MOD REPORT + DROPDOWN TOGGLE 8 KATEGORI -->
+          <div>
+            <button type="button" id="navBtnForm" onclick="toggleInputModDropdown()" class="w-full flex items-center justify-between px-3.5 py-2.5 bg-[#17431f] rounded-xl text-white font-bold text-xs text-left shadow-md border border-emerald-600/30 transition">
+              <span><i class="fa-solid fa-clipboard-list w-4 mr-1.5"></i> Input MOD Report</span>
+              <i id="inputModChevron" class="fa-solid fa-chevron-down text-[10px] text-emerald-300 transition-transform duration-200"></i>
+            </button>
+
+            <div id="sidebarCategoryList" class="mt-1.5 ml-2 pl-2.5 border-l border-emerald-700/60 space-y-1">
+              <button type="button" onclick="openCatTab(1)" id="sideTab1" class="side-cat-btn w-full text-left px-3 py-2 rounded-lg text-[11px] font-bold bg-emerald-800/70 text-white transition">1. General & Forecast</button>
+              <button type="button" onclick="openCatTab(2)" id="sideTab2" class="side-cat-btn w-full text-left px-3 py-2 rounded-lg text-[11px] font-medium text-emerald-100/75 hover:bg-[#17431f]/50 hover:text-white transition">2. Public Area (23)</button>
+              <button type="button" onclick="openCatTab(3)" id="sideTab3" class="side-cat-btn w-full text-left px-3 py-2 rounded-lg text-[11px] font-medium text-emerald-100/75 hover:bg-[#17431f]/50 hover:text-white transition">3. BOH & Lobby (33)</button>
+              <button type="button" onclick="openCatTab(4)" id="sideTab4" class="side-cat-btn w-full text-left px-3 py-2 rounded-lg text-[11px] font-medium text-emerald-100/75 hover:bg-[#17431f]/50 hover:text-white transition">4. Restaurant (16)</button>
+              <button type="button" onclick="openCatTab(5)" id="sideTab5" class="side-cat-btn w-full text-left px-3 py-2 rounded-lg text-[11px] font-medium text-emerald-100/75 hover:bg-[#17431f]/50 hover:text-white transition">5. Villa Checklist (81)</button>
+              <button type="button" onclick="openCatTab(6)" id="sideTab6" class="side-cat-btn w-full text-left px-3 py-2 rounded-lg text-[11px] font-medium text-emerald-100/75 hover:bg-[#17431f]/50 hover:text-white transition">6. Guest / F&B</button>
+              <button type="button" onclick="openCatTab(7)" id="sideTab7" class="side-cat-btn w-full text-left px-3 py-2 rounded-lg text-[11px] font-medium text-emerald-100/75 hover:bg-[#17431f]/50 hover:text-white transition">7. Operational</button>
+              <button type="button" onclick="openCatTab(8)" id="sideTab8" class="side-cat-btn w-full text-left px-3 py-2 rounded-lg text-[11px] font-medium text-emerald-100/75 hover:bg-[#17431f]/50 hover:text-white transition">8. Staff in Charge</button>
+            </div>
+          </div>
+
+          <!-- MENU 2: HISTORY & EXPORT PDF -->
+          <button type="button" id="navBtnHistory" onclick="switchMainView('history')" class="w-full flex items-center gap-2.5 px-3.5 py-2.5 hover:bg-[#17431f]/50 rounded-xl text-emerald-100/85 font-bold text-xs text-left transition mt-2">
+            <i class="fa-solid fa-clock-rotate-left w-4"></i> History & Export PDF
+          </button>
+
+          <!-- MENU 3 BARU: HISTORY ISSUE (TRACKER & DISPATCH KE HOD) -->
+          <button type="button" id="navBtnIssues" onclick="switchMainView('issues')" class="w-full flex items-center justify-between px-3.5 py-2.5 hover:bg-[#17431f]/50 rounded-xl text-emerald-100/85 font-bold text-xs text-left transition mt-1">
+            <span><i class="fa-solid fa-triangle-exclamation text-amber-400 w-4 mr-1.5"></i> History Issue</span>
+            <span id="sidebarOpenIssueBadge" class="hidden bg-red-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full">0</span>
+          </button>
+
+          <!-- MENU 4: LOGOUT -->
+          <button type="button" onclick="handleLogout()" class="w-full flex items-center gap-2.5 px-3.5 py-2.5 bg-red-950/40 hover:bg-red-900/50 text-red-300 rounded-xl font-bold text-xs text-left border border-red-800/40 transition mt-2">
+            <i class="fa-solid fa-right-from-bracket w-4"></i> Logout
+          </button>
+        </nav>
+      </div>
+      
+      <div class="border-t border-[#17431f]/50 pt-3 mt-4">
+        <p class="text-[10px] text-emerald-200/50 uppercase tracking-wider mb-1.5">Logged in as</p>
+        <div class="flex items-center gap-2.5">
+          <div id="userAvatar" class="w-8 h-8 rounded-full bg-[#17431f] border border-emerald-500/50 flex items-center justify-center text-xs font-bold text-emerald-300">HOD</div>
+          <div class="leading-tight min-w-0">
+            <strong id="loggedUserName" class="text-white text-xs block font-semibold truncate">-</strong>
+            <span id="loggedUserPos" class="text-[10px] text-emerald-200/70 block truncate">-</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN APP AREA -->
+    <main class="flex-1 w-full min-w-0 p-3 sm:p-5 md:p-8 overflow-y-auto pb-28">
+      <header class="flex items-center justify-between gap-2 mb-5 bg-white p-3.5 md:p-4 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex items-center gap-2.5">
+          <button type="button" onclick="openSidebarMobile()" class="md:hidden p-2.5 bg-emerald-50 text-[#17431f] hover:bg-emerald-100 rounded-xl transition text-base"><i class="fa-solid fa-bars"></i></button>
+          <div>
+            <h2 class="text-sm sm:text-base md:text-xl font-extrabold text-slate-800 leading-tight">Manager On Duty Report</h2>
+            <p class="text-[11px] text-slate-500 hidden sm:block">Multi-Villa Aggregation, Issue Tracker & Daily Operational Checklist</p>
+          </div>
+        </div>
+        <div class="bg-slate-50 px-2.5 py-1.5 md:px-3 md:py-2 rounded-xl border border-slate-200 text-[11px] md:text-xs text-slate-700 font-semibold flex items-center gap-1.5 flex-shrink-0">
+          <i class="fa-regular fa-calendar-check text-[#17431f]"></i><span id="currentDateHeader"></span>
+        </div>
+      </header>
+
+      <!-- ==================== VIEW A: FORM INPUT / DRAFT ==================== -->
+      <div id="viewForm" class="space-y-5">
+        <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span id="badgeReportId" class="bg-emerald-100 text-[#17431f] text-[11px] font-extrabold px-2.5 py-1 rounded-lg">Draft Baru</span>
+            <span id="lastSavedLabel" class="text-[11px] text-slate-500">Belum disimpan</span>
+          </div>
+          <button type="button" onclick="createNewReport()" class="text-xs font-bold text-slate-600 hover:text-[#17431f] bg-slate-100 hover:bg-emerald-50 px-3 py-1.5 rounded-lg border border-slate-200 transition">
+            <i class="fa-solid fa-file-circle-plus mr-1"></i> Laporan Baru
+          </button>
+        </div>
+
+        <section class="bg-white p-3.5 md:p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 bg-emerald-50/40 p-3 rounded-xl border border-emerald-100/60">
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Day / Date</label>
+              <input type="text" id="DayDate" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-semibold focus:ring-2 focus:ring-[#17431f] outline-none">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Time / Shift</label>
+              <select id="Time" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-semibold focus:ring-2 focus:ring-[#17431f] outline-none">
+                <option value="07.00 - 15.00">Morning (07.00 - 15.00)</option>
+                <option value="15.00 - 23.00" selected>Evening (15.00 - 23.00)</option>
+                <option value="23.00 - 07.00">Night (23.00 - 07.00)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">MOD Name</label>
+              <input type="text" id="ModName" class="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 text-xs font-bold text-[#17431f] outline-none">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Position</label>
+              <input type="text" id="ModPosition" class="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 text-xs font-bold text-[#17431f] outline-none">
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 1: GENERAL INFORMATION & FORECAST -->
+        <section id="catPane1" class="cat-pane bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <h3 class="text-xs md:text-sm font-bold text-[#17431f] uppercase tracking-wider border-b border-slate-100 pb-3 mb-4">1. General Information & Forecast</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-xs">
+            <div class="space-y-3">
+              <div class="flex items-center justify-between border-b border-slate-100 pb-2"><span class="font-semibold text-slate-600">1. Last night occupancy:</span><input type="text" id="LastOcc" placeholder="N/A" class="fc-input w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-right font-medium"></div>
+              <div class="flex items-center justify-between border-b border-slate-100 pb-2"><span class="font-semibold text-slate-600">2. Last night room sold:</span><input type="text" id="LastRoom" placeholder="N/A" class="fc-input w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-right font-medium"></div>
+              <div class="flex items-center justify-between border-b border-slate-100 pb-2"><span class="font-semibold text-slate-600">3. Last night average room rate:</span><input type="text" id="LastARR" placeholder="N/A" class="fc-input w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-right font-medium"></div>
+              <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
+                <span class="font-bold text-slate-800 block border-b border-slate-200 pb-1">4. Today's forecast:</span>
+                <div class="flex justify-between items-center"><span class="pl-2 text-slate-600">- Occupancy:</span><input type="text" id="TodOcc" placeholder="N/A" class="fc-input w-1/2 bg-white border border-slate-300 rounded-lg p-1.5 text-right"></div>
+                <div class="flex justify-between items-center"><span class="pl-2 text-slate-600">- Room sold:</span><input type="text" id="TodRoom" placeholder="N/A" class="fc-input w-1/2 bg-white border border-slate-300 rounded-lg p-1.5 text-right"></div>
+                <div class="flex justify-between items-center"><span class="pl-2 text-slate-600">- Average room rate:</span><input type="text" id="TodARR" placeholder="N/A" class="fc-input w-1/2 bg-white border border-slate-300 rounded-lg p-1.5 text-right"></div>
+              </div>
+              <div class="flex items-center justify-between border-b border-slate-100 pb-2"><span class="font-semibold text-slate-600">5. VIP welcome:</span><input type="text" id="VIPWelcome" placeholder="N/A" class="fc-input w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-1.5"></div>
+              <div class="flex items-center justify-between border-b border-slate-100 pb-2"><span class="font-semibold text-slate-600">6. Special Package:</span><input type="text" id="SpecPack" placeholder="N/A" class="fc-input w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-1.5"></div>
+            </div>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between border-b border-slate-100 pb-2"><span class="font-semibold text-slate-600">7. F&B Cover:</span><input type="text" id="FBCover" placeholder="N/A" class="fc-input w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-right"></div>
+              <div class="flex items-center justify-between border-b border-slate-100 pb-2"><span class="font-semibold text-slate-600">8. F&B Revenue:</span><input type="text" id="FBRev" placeholder="N/A" class="fc-input w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-right"></div>
+              <div class="flex items-center justify-between border-b border-slate-100 pb-2"><span class="font-semibold text-slate-600">9. Event Today:</span><input type="text" id="EventTod" placeholder="N/A" class="fc-input w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-1.5"></div>
+              <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
+                <span class="font-bold text-slate-800 block border-b border-slate-200 pb-1">10. Tomorrow forecast:</span>
+                <div class="flex justify-between items-center"><span class="pl-2 text-slate-600">- Occupancy:</span><input type="text" id="TomOcc" placeholder="N/A" class="fc-input w-1/2 bg-white border border-slate-300 rounded-lg p-1.5 text-right"></div>
+                <div class="flex justify-between items-center"><span class="pl-2 text-slate-600">- Room sold:</span><input type="text" id="TomRoom" placeholder="N/A" class="fc-input w-1/2 bg-white border border-slate-300 rounded-lg p-1.5 text-right"></div>
+                <div class="flex justify-between items-center"><span class="pl-2 text-slate-600">- Average room rate:</span><input type="text" id="TomARR" placeholder="N/A" class="fc-input w-1/2 bg-white border border-slate-300 rounded-lg p-1.5 text-right"></div>
+              </div>
+              <div class="flex items-center justify-between border-b border-slate-100 pb-2"><span class="font-semibold text-slate-600">11. Tomorrow VIP:</span><input type="text" id="TomVIP" placeholder="N/A" class="fc-input w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-1.5"></div>
+              <div class="flex items-center justify-between border-b border-slate-100 pb-2"><span class="font-semibold text-slate-600">12. Nordic visit time:</span><input type="text" id="NordicVisit" placeholder="N/A" class="fc-input w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-right"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 2: PUBLIC AREA -->
+        <section id="catPane2" class="cat-pane hidden bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-3 mb-4">
+            <h3 class="text-xs md:text-sm font-bold text-[#17431f] uppercase tracking-wider">2. Public & General Area Inspection (23 Items)</h3>
+            <button type="button" onclick="setAllGood('pa')" class="bg-emerald-50 hover:bg-emerald-100 text-[#17431f] border border-emerald-200 text-xs font-bold px-3 py-1.5 rounded-lg">Set Semua "Good"</button>
+          </div>
+          <div id="container_pa" class="overflow-x-auto rounded-xl border border-slate-200"></div>
+        </section>
+
+        <!-- TAB 3: BOH & LOBBY -->
+        <section id="catPane3" class="cat-pane hidden bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-3 mb-4">
+            <h3 class="text-xs md:text-sm font-bold text-[#17431f] uppercase tracking-wider">3. BOH & Lobby Area (33 Items)</h3>
+            <button type="button" onclick="setAllGood('boh')" class="bg-emerald-50 hover:bg-emerald-100 text-[#17431f] border border-emerald-200 text-xs font-bold px-3 py-1.5 rounded-lg">Set Semua "Good"</button>
+          </div>
+          <div id="container_boh" class="overflow-x-auto rounded-xl border border-slate-200"></div>
+        </section>
+
+        <!-- TAB 4: RESTAURANT -->
+        <section id="catPane4" class="cat-pane hidden bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-3 mb-4">
+            <h3 class="text-xs md:text-sm font-bold text-[#17431f] uppercase tracking-wider">4. Restaurant - Kitchen & Bar (16 Items)</h3>
+            <button type="button" onclick="setAllGood('rest')" class="bg-emerald-50 hover:bg-emerald-100 text-[#17431f] border border-emerald-200 text-xs font-bold px-3 py-1.5 rounded-lg">Set Semua "Good"</button>
+          </div>
+          <div id="container_rest" class="overflow-x-auto rounded-xl border border-slate-200"></div>
+        </section>
+
+        <!-- TAB 5: VILLA CHECKLIST -->
+        <section id="catPane5" class="cat-pane hidden bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-3 mb-4">
+            <div>
+              <h3 class="text-xs md:text-sm font-bold text-[#17431f] uppercase tracking-wider">5. Villa Inspection Checklist (81 Items / Unit)</h3>
+              <p class="text-[11px] text-slate-500">Minimal 2 unit Villa per laporan. Klik "+ Tambah Villa" jika lebih dari 2 unit.</p>
+            </div>
+            <button type="button" onclick="addVillaBlock()" class="bg-[#17431f] hover:bg-[#103016] text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-sm">
+              <i class="fa-solid fa-plus mr-1"></i> Tambah Villa
+            </button>
+          </div>
+          <div id="villaSubTabs" class="flex gap-2 border-b border-slate-200 pb-3 mb-4 overflow-x-auto"></div>
+          <div id="villaSubContent"></div>
+        </section>
+
+        <!-- TAB 6: GUEST / F&B COMMENTS -->
+        <section id="catPane6" class="cat-pane hidden bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <h3 class="text-xs md:text-sm font-bold text-[#17431f] uppercase tracking-wider border-b border-slate-100 pb-3 mb-4">6. Guest / F&B Comments</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <div><label class="font-bold text-slate-700 block mb-1.5">Guest Comments:</label><textarea id="GuestCom" rows="4" placeholder="If Any" class="com-input w-full bg-slate-50 border border-slate-200 rounded-xl p-3"></textarea></div>
+            <div><label class="font-bold text-slate-700 block mb-1.5">Food & Beverage:</label><textarea id="FBCom" rows="4" placeholder="If Any" class="com-input w-full bg-slate-50 border border-slate-200 rounded-xl p-3"></textarea></div>
+            <div><label class="font-bold text-slate-700 block mb-1.5">Not Available Items:</label><textarea id="NA_Items" rows="4" placeholder="If Any" class="com-input w-full bg-slate-50 border border-slate-200 rounded-xl p-3"></textarea></div>
+          </div>
+        </section>
+
+        <!-- TAB 7: OPERATIONAL COMMENTS & PROJECT -->
+        <section id="catPane7" class="cat-pane hidden bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <h3 class="text-xs md:text-sm font-bold text-[#17431f] uppercase tracking-wider border-b border-slate-100 pb-3 mb-4">7. Operational Comments & Project</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <div><label class="font-bold text-slate-700 block mb-1">General Observation:</label><textarea id="GenObs" rows="3" placeholder="If Any" class="com-input w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5"></textarea></div>
+            <div><label class="font-bold text-slate-700 block mb-1">Gardening Observation:</label><textarea id="GardObs" rows="3" placeholder="If Any" class="com-input w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5"></textarea></div>
+            <div><label class="font-bold text-slate-700 block mb-1">Ground Water Tank Level (%):</label><input type="text" id="GWT_Level" placeholder="e.g. 85%" class="com-input w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5"></div>
+            <div><label class="font-bold text-slate-700 block mb-1">PLN Meter (53 KVA):</label><input type="text" id="PLN_53" placeholder="e.g. 466.446" class="com-input w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5"></div>
+            <div><label class="font-bold text-slate-700 block mb-1">PLN Meter (192 KVA):</label><input type="text" id="PLN_192" placeholder="e.g. 769.259" class="com-input w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5"></div>
+            <div><label class="font-bold text-slate-700 block mb-1">Pool Maintenance:</label><textarea id="PoolObs" rows="2" placeholder="If Any" class="com-input w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5"></textarea></div>
+            <div class="md:col-span-3"><label class="font-bold text-slate-700 block mb-1">Room Showing:</label><textarea id="RoomShow" rows="2" placeholder="If Any" class="com-input w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5"></textarea></div>
+          </div>
+        </section>
+
+        <!-- TAB 8: STAFF IN CHARGE -->
+        <section id="catPane8" class="cat-pane hidden bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-3 mb-4">
+            <h3 class="text-xs md:text-sm font-bold text-[#17431f] uppercase tracking-wider">8. Staff in Charge</h3>
+            <button type="button" onclick="addStaffRow()" class="bg-[#17431f] hover:bg-[#103016] text-white text-xs font-bold px-3.5 py-2 rounded-xl">
+              <i class="fa-solid fa-user-plus mr-1"></i> Tambah Karyawan
+            </button>
+          </div>
+          <div class="overflow-x-auto rounded-xl border border-slate-200">
+            <table class="w-full text-left border-collapse text-xs min-w-[450px]">
+              <thead>
+                <tr class="bg-slate-50 text-slate-600 uppercase text-[10px] font-extrabold border-b border-slate-200">
+                  <th class="py-3 px-3 w-1/4">Department</th>
+                  <th class="py-3 px-3 w-2/5">Staff Name</th>
+                  <th class="py-3 px-3 w-1/4">Shift</th>
+                  <th class="py-3 px-3 text-center w-14">Hapus</th>
+                </tr>
+              </thead>
+              <tbody id="staffTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <!-- ==================== VIEW B: HISTORY & EXPORT PDF ==================== -->
+      <div id="viewHistory" class="hidden space-y-4">
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap gap-3 justify-between items-center">
+          <div class="flex flex-wrap gap-2 flex-1">
+            <input type="text" id="filterSearch" onkeyup="renderHistoryTable()" placeholder="Cari Tanggal, Nama MOD, atau Villa..." class="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs w-full sm:w-64 outline-none focus:border-[#17431f]">
+            <select id="filterStatus" onchange="renderHistoryTable()" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-[#17431f] outline-none focus:border-[#17431f]">
+              <option value="Draft" selected>Draft (Belum Export PDF)</option>
+              <option value="Final">Final / PDF</option>
+              <option value="Sent">Sent via Email</option>
+              <option value="">Semua Status</option>
+            </select>
+          </div>
+          <button type="button" onclick="loadHistory()" class="bg-emerald-50 text-[#17431f] border border-emerald-200 text-xs font-bold px-3.5 py-2 rounded-xl">
+            <i class="fa-solid fa-rotate mr-1"></i> Refresh
+          </button>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs min-w-[850px]">
+            <thead>
+              <tr class="bg-slate-50 text-slate-500 uppercase text-[10px] font-extrabold border-b border-slate-200">
+                <th class="py-3 px-4">Report ID</th>
+                <th class="py-3 px-4">Day / Date</th>
+                <th class="py-3 px-4">MOD Name</th>
+                <th class="py-3 px-4">Villas Checked</th>
+                <th class="py-3 px-4">Status</th>
+                <th class="py-3 px-4">Last Updated</th>
+                <th class="py-3 px-4 text-right">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ==================== VIEW C: HISTORY ISSUE & DISPATCH HOD ==================== -->
+      <div id="viewIssues" class="hidden space-y-4">
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+          <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-3">
+            <div>
+              <h3 class="text-sm font-extrabold text-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-triangle-exclamation text-red-600"></i> History Issue & Defect Tracker
+              </h3>
+              <p class="text-[11px] text-slate-500">Filter area issue, centang item yang ingin direkap, lalu Export ke PDF atau kirim Email langsung ke HOD Engineering / Housekeeping / Semua HOD.</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" onclick="exportSelectedIssuesPDF()" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-sm transition flex items-center gap-1.5">
+                <i class="fa-solid fa-file-pdf"></i> Export Issue PDF
+              </button>
+              <button type="button" id="btnSendIssueEmail" onclick="openIssueEmailModal()" disabled class="bg-slate-100 text-slate-400 border border-slate-200 text-xs font-bold px-3.5 py-2 rounded-xl cursor-not-allowed transition flex items-center gap-1.5" title="Export Issue PDF terlebih dahulu">
+                <i class="fa-solid fa-envelope"></i> Kirim Email ke HOD
+              </button>
+            </div>
+          </div>
+
+          <!-- Filter Sub Area & Status -->
+          <div class="flex flex-wrap gap-2 items-center justify-between">
+            <div class="flex flex-wrap gap-2 flex-1">
+              <select id="issueAreaFilter" onchange="renderIssuesTable()" class="bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 text-xs font-bold text-[#17431f] outline-none">
+                <option value="">Semua Area Issue</option>
+                <option value="Villa Issue">Villa Issue</option>
+                <option value="Public Area Issue">Public Area Issue</option>
+                <option value="BOH & Lobby Area Issue">BOH & Lobby Area Issue</option>
+                <option value="Restaurant Issue">Restaurant Issue</option>
+              </select>
+
+              <select id="issueStatusFilter" onchange="renderIssuesTable()" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 outline-none">
+                <option value="Open" selected>Open (Belum Selesai)</option>
+                <option value="Resolved">Resolved (Selesai)</option>
+                <option value="">Semua Status</option>
+              </select>
+
+              <input type="text" id="issueSearchInput" onkeyup="renderIssuesTable()" placeholder="Cari Villa, Item, atau Notes..." class="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs w-full sm:w-60 outline-none focus:border-[#17431f]">
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span id="selectedIssueCounter" class="text-[11px] font-bold text-[#17431f] bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-emerald-200">0 Terpilih</span>
+              <button type="button" onclick="loadHistoryIssues()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-xl">
+                <i class="fa-solid fa-rotate"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabel History Issue -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs min-w-[900px]">
+            <thead>
+              <tr class="bg-slate-50 text-slate-500 uppercase text-[10px] font-extrabold border-b border-slate-200">
+                <th class="py-3 px-3 w-10 text-center">
+                  <input type="checkbox" id="checkAllIssues" onchange="toggleSelectAllIssues(this)" class="rounded border-slate-300 text-[#17431f] focus:ring-[#17431f]">
+                </th>
+                <th class="py-3 px-3">Date / MOD</th>
+                <th class="py-3 px-3">Area Category</th>
+                <th class="py-3 px-3">Sub Area / Unit Villa</th>
+                <th class="py-3 px-3">Item Checklist</th>
+                <th class="py-3 px-3">Issue Notes</th>
+                <th class="py-3 px-3 text-center">Status Follow-up</th>
+              </tr>
+            </thead>
+            <tbody id="issuesTableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- STICKY BOTTOM ACTION BAR: HANYA TOMBOL "SIMPAN DATA" -->
+  <div id="bottomActionBar" class="hidden fixed bottom-0 left-0 md:left-64 right-0 bg-white/95 backdrop-blur border-t border-slate-200 px-3 md:px-8 py-2.5 z-40 shadow-lg">
+    <div class="max-w-6xl mx-auto flex flex-wrap justify-between items-center gap-2">
+      <span class="text-[11px] text-slate-500 hidden lg:inline">Semua item berstatus <strong>Issue</strong> otomatis masuk ke menu <strong>History Issue</strong> saat disimpan.</span>
+      <div class="ml-auto w-full sm:w-auto flex justify-end">
+        <button type="button" onclick="handleSaveData()" class="w-full sm:w-auto justify-center bg-[#17431f] hover:bg-[#103016] text-white font-bold text-xs px-6 py-2.5 rounded-xl shadow-md transition flex items-center gap-2">
+          <i class="fa-solid fa-floppy-disk"></i> Simpan Data
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL POPUP PREVIEW PDF -->
+  <div id="pdfPreviewModal" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-[95] flex items-center justify-center p-2 sm:p-4">
+    <div class="bg-white rounded-2xl w-full max-w-5xl h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="bg-[#17431f] text-white px-5 py-3 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-file-pdf text-red-300 text-base"></i>
+          <h4 class="text-xs sm:text-sm font-bold uppercase tracking-wider" id="pdfModalTitle">Preview Dokumen PDF</h4>
+        </div>
+        <div class="flex items-center gap-2">
+          <a id="pdfExternalLink" href="#" target="_blank" class="bg-white/15 hover:bg-white/25 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition">
+            <i class="fa-solid fa-up-right-from-square mr-1"></i> Buka Tab Baru
+          </a>
+          <button type="button" onclick="closePdfPreviewModal()" class="bg-red-500/80 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold">
+            <i class="fa-solid fa-xmark mr-1"></i> Tutup
+          </button>
+        </div>
+      </div>
+      <div class="flex-1 bg-slate-200 relative">
+        <iframe id="pdfPreviewIframe" class="w-full h-full border-0" src=""></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL KIRIM EMAIL LAPORAN MOD UTAMA -->
+  <div id="emailModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden">
+      <div class="bg-[#17431f] text-white px-5 py-3.5 flex justify-between items-center">
+        <h4 class="text-xs font-bold uppercase tracking-wider"><i class="fa-solid fa-envelope mr-2"></i>Kirim Laporan PDF via Email</h4>
+        <button type="button" onclick="closeEmailModal()" class="text-white/80 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="p-5 space-y-3 text-xs">
+        <input type="hidden" id="emailReportId">
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Kepada (To Email):</label>
+          <input type="email" id="emailTo" placeholder="gm@seahavenvillas.com, hod@seahavenvillas.com" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5">
+        </div>
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">CC (Opsional):</label>
+          <input type="text" id="emailCc" placeholder="Pisahkan dengan koma..." class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5">
+        </div>
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Pesan Tambahan:</label>
+          <textarea id="emailBody" rows="3" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5"></textarea>
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeEmailModal()" class="px-4 py-2 rounded-xl border border-slate-300 font-bold text-slate-600">Batal</button>
+          <button type="button" onclick="submitEmail()" class="px-4 py-2 rounded-xl bg-[#17431f] text-white font-bold">Kirim Sekarang</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL KIRIM EMAIL ISSUE KE HOD (ENGINEERING / HOUSEKEEPING / SEMUA HOD) -->
+  <div id="issueEmailModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden">
+      <div class="bg-red-700 text-white px-5 py-3.5 flex justify-between items-center">
+        <h4 class="text-xs font-bold uppercase tracking-wider"><i class="fa-solid fa-paper-plane mr-2"></i>Kirim Rekap Issue ke HOD Terkait</h4>
+        <button type="button" onclick="closeIssueEmailModal()" class="text-white/80 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="p-5 space-y-3 text-xs">
+        <div>
+          <label class="font-bold text-slate-700 block mb-1.5">Pilih Cepat Departemen HOD (Dari Sheet Users_HOD):</label>
+          <div class="flex flex-wrap gap-1.5">
+            <button type="button" onclick="applyHODPreset('ENG')" class="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 px-2.5 py-1.5 rounded-lg font-bold text-[11px]">
+              <i class="fa-solid fa-wrench mr-1"></i> HOD Engineering
+            </button>
+            <button type="button" onclick="applyHODPreset('HK')" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-1.5 rounded-lg font-bold text-[11px]">
+              <i class="fa-solid fa-broom mr-1"></i> HOD Housekeeping
+            </button>
+            <button type="button" onclick="applyHODPreset('ALL')" class="bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-300 px-2.5 py-1.5 rounded-lg font-bold text-[11px]">
+              <i class="fa-solid fa-users mr-1"></i> Semua HOD
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Kepada (To Email):</label>
+          <input type="text" id="issueEmailTo" placeholder="engineering@seahavenvillas.com, housekeeping@seahavenvillas.com" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5">
+        </div>
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">CC (Opsional):</label>
+          <input type="text" id="issueEmailCc" placeholder="gm@seahavenvillas.com" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5">
+        </div>
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Subjek Email:</label>
+          <input type="text" id="issueEmailSubject" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-semibold">
+        </div>
+        <div>
+          <label class="font-bold text-slate-700 block mb-1">Pesan untuk HOD:</label>
+          <textarea id="issueEmailBody" rows="3" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5"></textarea>
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeIssueEmailModal()" class="px-4 py-2 rounded-xl border border-slate-300 font-bold text-slate-600">Batal</button>
+          <button type="button" onclick="submitIssueEmail()" class="px-4 py-2 rounded-xl bg-red-700 hover:bg-red-800 text-white font-bold">Kirim Rekap Issue</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+// ==================== MASTER DATA & ENUM ====================
+const VILLA_ENUM = [
+  "Atlantis 101", "Atlantis 102", "Atlantis 103", "Atlantis 105", "Atlantis 106",
+  "Atlantis 201", "Atlantis 202", "Atlantis 203", "Atlantis 205", "Atlantis 206",
+  "Atlantis 301", "Atlantis 302", "Atlantis 303", "Atlantis 305", "Atlantis 306",
+  "Levithia 501", "Levithia 502", "Levithia 503", "Levithia 505", "Levithia 506"
+];
+const DEPT_ENUM = ["FO", "HK", "EG", "FBS", "FBK", "SEC"];
+const SHIFT_ENUM = ["Morning Shift", "Middle Shift", "Evening Shift", "Night Shift"];
+
+const PA_ITEMS = [
+  ["TOTEM & ENTRANCE", "Villa Entrance – Main Road"], ["TOTEM & ENTRANCE", "Villa Totem Main Entrance"],
+  ["TOTEM & ENTRANCE", "Entrance Pathway"], ["GENSET", "Genset Building Front Side"],
+  ["GENSET", "Genset Building Inside"], ["GARDEN & PATHWAY", "Pond (water flow)"],
+  ["TOTEM & ENTRANCE", "Kamuela Sign Board"], ["GARDEN & PATHWAY", "Main Pathway"],
+  ["GARDEN & PATHWAY", "Main Pathway Signage"], ["GARDEN & PATHWAY", "Garden Main Pathway"],
+  ["GARDEN & PATHWAY", "Corridor AB & Garden"], ["GARDEN & PATHWAY", "Signage"],
+  ["GARDEN & PATHWAY", "Corridor CD & Garden"], ["GARDEN & PATHWAY", "Temple"],
+  ["MAIN POOL", "Pool Deck, Wall, Rim"], ["MAIN POOL", "Pool Sun Bed & Cushion"],
+  ["MAIN POOL", "Main Swimming Pool"], ["MAIN POOL", "Pool Signage"],
+  ["GARDEN & PATHWAY", "Garden Building Levithia"], ["GARDEN & PATHWAY", "The River"],
+  ["GARDEN & PATHWAY", "Garden River Side"], ["GARDEN & PATHWAY", "Drainage next to the restaurant"],
+  ["ALL", "All Lamp/Lighting"]
+];
+
+const BOH_ITEMS = [
+  ["OFFICE", "Staircase"], ["OFFICE", "ITM Office"], ["OFFICE", "GM Office"], ["OFFICE", "HRM Office"],
+  ["OFFICE", "PRC/PRM Office"], ["OFFICE", "CA Office"], ["OFFICE", "Accounting Office area"],
+  ["OFFICE", "Meeting Area"], ["OFFICE", "Terrace Garden"], ["OFFICE", "Toilet 2nd floor"],
+  ["OFFICE", "Curtain"], ["OFFICE", "Canteen"], ["OFFICE", "Corridor"], ["OFFICE", "PABX"],
+  ["OFFICE", "Locker"], ["OFFICE", "Staff Toilet"], ["OFFICE", "Main Corridor"], ["OFFICE", "General Store"],
+  ["OFFICE", "F&B Store"], ["OFFICE", "Linen Store"], ["OFFICE", "Laundry Machine & Area"],
+  ["OFFICE", "Petrol Tank & Area"], ["OFFICE", "Genset Room"], ["OFFICE", "Garbage Area"],
+  ["OFFICE", "Roof top floor next to GM’s office"], ["OFFICE", "Garden next to Executive Office"],
+  ["OFFICE", "Roof (Any Leaking)?"], ["LOBBY AREA", "Drop Off"], ["LOBBY AREA", "Receiving Area"],
+  ["LOBBY AREA", "Reception Counter"], ["LOBBY AREA", "Fresh Flower"], ["LOBBY AREA", "Lobby Toilet"],
+  ["OFFICE & LOBBY AREA", "All Lamp/Lighting"]
+];
+
+const REST_ITEMS = [
+  ["KITCHEN", "Cabinet"], ["KITCHEN", "Freezer"], ["KITCHEN", "Chiller"], ["KITCHEN", "Sink"],
+  ["KITCHEN", "Stove with Oven"], ["KITCHEN", "Deep Fryer"], ["KITCHEN", "Wok"], ["KITCHEN", "Ceiling"],
+  ["KITCHEN", "Floor"], ["KITCHEN", "Gutter & Grease Trap"], ["BAR", "Restaurant Entrance-Signage"],
+  ["BAR", "Restaurant Level 2 & Fan"], ["BAR", "Restaurant Level 1 & Fan"], ["BAR", "Restaurant Toilet"],
+  ["BAR", "Restaurant Bar"], ["BAR & KITCHEN", "All Lamp/Lighting"]
+];
+
+const VILLA_ITEMS = [
+  ["1st Floor", "Entrance"], ["1st Floor", "Garden Entrance"], ["1st Floor", "Main Door & Villa Number"],
+  ["1st Floor", "Clay Pot Décor / Gentong"], ["1st Floor", "Pool"], ["1st Floor", "Kitchenette & Table"],
+  ["1st Floor", "Refrigerator & Cabinet"], ["1st Floor", "Blind Curtain"], ["1st Floor", "Induction is Working"],
+  ["1st Floor", "Sink"], ["1st Floor", "Kitchen Tools (Pot, Pan, Etc)"], ["1st Floor", "Cleaning Supplies"],
+  ["1st Floor", "2 Bottles of Water 1000ml"], ["1st Floor", "Kitchen Shelves"], ["1st Floor", "Kitchen Drawer"],
+  ["1st Floor", "Grease Trap"], ["1st Floor", "Dining Table"], ["1st Floor", "Emergency Signage"],
+  ["1st Floor", "APAR"], ["1st Floor", "Door Handle & Key Lock"], ["1st Floor", "Toilet & Sanitary Ware"],
+  ["1st Floor", "Living Room Area"], ["1st Floor", "Fan"], ["1st Floor", "Air Conditioning (AC)"],
+  ["1st Floor", "TV & Channel Card"], ["1st Floor", "Telephone"], ["1st Floor", "Side Standing Lamp"],
+  ["1st Floor", "Cactus Plant"], ["1st Floor", "Wooden Pool Deck"], ["1st Floor", "Garden, Grass"],
+  ["1st Floor", "Pump Room Steel Black"], ["1st Floor", "Wooden Bench Pool"], ["1st Floor", "All Lamp/Lighting"],
+  ["2nd Floor", "Hanging Balls Decoration"], ["2nd Floor", "Staircase"], ["2nd Floor", "Wardrobe"],
+  ["2nd Floor", "Kimono & Hanger"], ["2nd Floor", "Sleepers"], ["2nd Floor", "Laundry Bag"],
+  ["2nd Floor", "Laundry List"], ["2nd Floor", "Pencil"], ["2nd Floor", "Safe Deposit Box"],
+  ["2nd Floor", "Cabinet"], ["2nd Floor", "2nd Floor Bathroom Area"], ["2nd Floor", "Amenities – Check Standard"],
+  ["2nd Floor", "Tissue Box"], ["2nd Floor", "Hair Dryer"], ["2nd Floor", "Face Towels"],
+  ["2nd Floor", "Hand Towels"], ["2nd Floor", "Bath Towels"], ["2nd Floor", "Water Closet"],
+  ["2nd Floor", "Spray Jet"], ["2nd Floor", "Toilet Paper"], ["2nd Floor", "Bath Tub"],
+  ["2nd Floor", "Glass Window"], ["2nd Floor", "Blind Curtain"], ["2nd Floor", "Bath Soap"],
+  ["2nd Floor", "Shower Head, Upper Side"], ["2nd Floor", "Hand Shower"], ["2nd Floor", "Soap, Shampoo"],
+  ["2nd Floor", "Drainage"], ["2nd Floor", "TV & Channels Card"], ["2nd Floor", "Curtain"],
+  ["2nd Floor", "Inner Curtain"], ["2nd Floor", "Air Conditioning/AC"], ["2nd Floor", "Bed"],
+  ["2nd Floor", "2 Large Pillow & Cover"], ["2nd Floor", "2 Small Pillow & Cover"], ["2nd Floor", "Duvet"],
+  ["2nd Floor", "Bed Sheet"], ["2nd Floor", "Bed Wooden Frame"], ["2nd Floor", "Below Bed"],
+  ["2nd Floor", "Bottle of water 600mll"], ["2nd Floor", "Jacuzzi"], ["2nd Floor", "Check Hot Water"],
+  ["2nd Floor", "Terrace to main Pool (D)"], ["2nd Floor", "Garden"], ["2nd Floor", "Curb Ramp"],
+  ["2nd Floor", "Wooden Decorative Wall"], ["2nd Floor", "Back Villa Wall (wall facing to the main pool)"],
+  ["2nd Floor", "All Lamp/Lighting"]
+];
+
+const SESSION_KEY = 'seahaven_mod_user_session';
+let currentUser = null;
+let currentReportId = '';
+let currentPdfUrl = '';
+let villaCount = 0;
+let allHistoryReports = [];
+let allIssuesList = [];
+let selectedIssueIds = new Set();
+let lastExportedIssuePdfId = '';
+let hodDirectory = [];
+
+function showLoader(msg) {
+  document.getElementById('globalLoaderText').innerText = msg || 'Memproses...';
+  document.getElementById('globalLoader').classList.remove('hidden');
+}
+function hideLoader() {
+  document.getElementById('globalLoader').classList.add('hidden');
+}
+
+// ==================== LOGIN & SESSION (PERSISTENT LOCALSTORAGE) ====================
+window.addEventListener('DOMContentLoaded', () => {
+  try {
+    const savedSession = localStorage.getItem(SESSION_KEY);
+    if (savedSession) {
+      const userData = JSON.parse(savedSession);
+      if (userData && userData.fullName) {
+        enterDashboard(userData, false);
+      }
+    }
+  } catch (e) {
+    localStorage.removeItem(SESSION_KEY);
+  }
+});
+
+function toggleManualLoginForm() {
+  const form = document.getElementById('loginForm');
+  const icon = document.getElementById('manualToggleIcon');
+  form.classList.toggle('hidden');
+  icon.classList.toggle('rotate-90');
+}
+
+function handleGoogleLogin() {
+  const alertBox = document.getElementById('loginAlert');
+  const label = document.getElementById('googleBtnLabel');
+  alertBox.classList.add('hidden');
+  label.innerText = 'Authenticating Google...';
+
+  google.script.run
+    .withSuccessHandler(res => {
+      label.innerText = 'Sign in with Google Official';
+      if (res.status === 'Success') {
+        enterDashboard(res.userData, true);
+      } else {
+        alertBox.innerText = res.message;
+        alertBox.classList.remove('hidden');
+      }
+    })
+    .withFailureHandler(err => {
+      label.innerText = 'Sign in with Google Official';
+      alertBox.innerText = 'Error: ' + err.message;
+      alertBox.classList.remove('hidden');
+    })
+    .checkGoogleWorkspaceLogin();
+}
+
+function handleLogin(e) {
+  e.preventDefault();
+  const u = document.getElementById('loginUsername').value;
+  const p = document.getElementById('loginPassword').value;
+  const alertBox = document.getElementById('loginAlert');
+  const btn = document.getElementById('btnLogin');
+
+  alertBox.classList.add('hidden');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Authenticating...';
+
+  google.script.run
+    .withSuccessHandler(res => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Sign In to System';
+      if (res.status === 'Success') {
+        enterDashboard(res.userData, true);
+      } else {
+        alertBox.innerText = res.message;
+        alertBox.classList.remove('hidden');
+      }
+    })
+    .withFailureHandler(err => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Sign In to System';
+      alertBox.innerText = 'Error: ' + err.message;
+      alertBox.classList.remove('hidden');
+    })
+    .checkHODLogin(u, p);
+}
+
+function enterDashboard(userData, saveToStorage = true) {
+  currentUser = userData;
+
+  if (saveToStorage) {
+    try {
+      localStorage.setItem(SESSION_KEY, JSON.stringify(userData));
+    } catch (e) {
+      console.warn('Gagal menyimpan sesi ke localStorage:', e);
+    }
+  }
+
+  document.getElementById('loggedUserName').innerText = currentUser.fullName;
+  document.getElementById('loggedUserPos').innerText = currentUser.position;
+  document.getElementById('userAvatar').innerText = currentUser.fullName.substring(0, 2).toUpperCase();
+
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.body.classList.remove('flex', 'items-center', 'justify-center');
+  document.getElementById('appScreen').classList.remove('hidden');
+  document.getElementById('bottomActionBar').classList.remove('hidden');
+
+  initDefaultForm();
+  refreshOpenIssueBadge();
+  google.script.run.withSuccessHandler(list => { hodDirectory = list || []; }).getHODEmailsList();
+}
+
+function handleLogout() {
+  if (!confirm('Keluar dari sistem?')) return;
+  currentUser = null;
+  localStorage.removeItem(SESSION_KEY);
+
+  document.getElementById('appScreen').classList.add('hidden');
+  document.getElementById('bottomActionBar').classList.add('hidden');
+  document.body.classList.add('flex', 'items-center', 'justify-center');
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('loginPassword').value = '';
+}
+
+// ==================== SIDEBAR & NAVIGATION ====================
+function openSidebarMobile() {
+  document.getElementById('sidebar').classList.remove('-translate-x-full');
+  document.getElementById('sidebarBackdrop').classList.remove('hidden');
+}
+function closeSidebarMobile() {
+  document.getElementById('sidebar').classList.add('-translate-x-full');
+  document.getElementById('sidebarBackdrop').classList.add('hidden');
+}
+
+function toggleInputModDropdown() {
+  const list = document.getElementById('sidebarCategoryList');
+  const chev = document.getElementById('inputModChevron');
+  list.classList.toggle('hidden');
+  chev.classList.toggle('-rotate-90');
+
+  if (document.getElementById('viewForm').classList.contains('hidden')) {
+    switchMainView('form');
+    list.classList.remove('hidden');
+    chev.classList.remove('-rotate-90');
+  }
+}
+
+function switchMainView(view) {
+  if (window.innerWidth < 768) closeSidebarMobile();
+
+  document.getElementById('viewForm').classList.add('hidden');
+  document.getElementById('viewHistory').classList.add('hidden');
+  document.getElementById('viewIssues').classList.add('hidden');
+  document.getElementById('bottomActionBar').classList.add('hidden');
+
+  ['navBtnForm', 'navBtnHistory', 'navBtnIssues'].forEach(id => {
+    document.getElementById(id).classList.remove('bg-[#17431f]', 'text-white');
+  });
+
+  if (view === 'form') {
+    document.getElementById('viewForm').classList.remove('hidden');
+    document.getElementById('bottomActionBar').classList.remove('hidden');
+    document.getElementById('navBtnForm').classList.add('bg-[#17431f]', 'text-white');
+  } else if (view === 'history') {
+    document.getElementById('viewHistory').classList.remove('hidden');
+    document.getElementById('navBtnHistory').classList.add('bg-[#17431f]', 'text-white');
+    document.getElementById('filterStatus').value = 'Draft';
+    loadHistory();
+  } else if (view === 'issues') {
+    document.getElementById('viewIssues').classList.remove('hidden');
+    document.getElementById('navBtnIssues').classList.add('bg-[#17431f]', 'text-white');
+    loadHistoryIssues();
+  }
+}
+
+// ==================== INIT FORM & SIDEBAR KATEGORI ====================
+function initDefaultForm() {
+  currentReportId = '';
+  currentPdfUrl = '';
+  document.getElementById('badgeReportId').innerText = 'Draft Baru';
+  document.getElementById('lastSavedLabel').innerText = 'Belum disimpan ke server';
+
+  const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' });
+  document.getElementById('DayDate').value = today;
+  document.getElementById('currentDateHeader').innerText = today;
+
+  if (currentUser) {
+    document.getElementById('ModName').value = currentUser.fullName;
+    document.getElementById('ModPosition').value = currentUser.position;
+  }
+
+  renderChecklistTable('container_pa', 'pa', PA_ITEMS);
+  renderChecklistTable('container_boh', 'boh', BOH_ITEMS);
+  renderChecklistTable('container_rest', 'rest', REST_ITEMS);
+
+  villaCount = 0;
+  document.getElementById('villaSubTabs').innerHTML = '';
+  document.getElementById('villaSubContent').innerHTML = '';
+  addVillaBlock();
+  addVillaBlock();
+
+  document.getElementById('staffTableBody').innerHTML = '';
+  DEPT_ENUM.forEach((d, idx) => addStaffRow(d, '', SHIFT_ENUM[idx] || 'Morning Shift'));
+  openCatTab(1);
+}
+
+function createNewReport() {
+  if (!confirm('Buat form laporan baru? Pastikan data sebelumnya sudah disimpan.')) return;
+  document.querySelectorAll('.fc-input, .com-input').forEach(el => el.value = '');
+  initDefaultForm();
+}
+
+function openCatTab(num) {
+  switchMainView('form');
+  document.getElementById('sidebarCategoryList').classList.remove('hidden');
+  document.getElementById('inputModChevron').classList.remove('-rotate-90');
+
+  document.querySelectorAll('.cat-pane').forEach(el => el.classList.add('hidden'));
+  document.querySelectorAll('.side-cat-btn').forEach(btn => {
+    btn.classList.remove('bg-emerald-800/70', 'text-white', 'font-bold');
+    btn.classList.add('text-emerald-100/75', 'font-medium');
+  });
+
+  document.getElementById('catPane' + num).classList.remove('hidden');
+  const activeBtn = document.getElementById('sideTab' + num);
+  activeBtn.classList.add('bg-emerald-800/70', 'text-white', 'font-bold');
+  activeBtn.classList.remove('text-emerald-100/75', 'font-medium');
+}
+
+function renderChecklistTable(containerId, prefix, items) {
+  let html = `<table class="w-full text-left border-collapse text-xs min-w-[580px]">
+    <thead><tr class="bg-slate-50 text-slate-500 uppercase text-[10px] font-extrabold border-b border-slate-200">
+      <th class="py-2.5 px-3 w-10 text-center">#</th><th class="py-2.5 px-3 w-36">Sub Area</th><th class="py-2.5 px-3">Item Checklist</th><th class="py-2.5 px-3 w-32">Status</th><th class="py-2.5 px-3 w-52">Notes</th>
+    </tr></thead><tbody class="divide-y divide-slate-100">`;
+  items.forEach((it, idx) => {
+    const i = idx + 1;
+    html += `<tr class="hover:bg-slate-50/80">
+      <td class="py-2 px-3 text-center text-slate-400 font-semibold">${i}</td>
+      <td class="py-2 px-3"><span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[10px] font-bold">${it[0]}</span></td>
+      <td class="py-2 px-3 font-medium text-slate-700">${it[1]}</td>
+      <td class="py-2 px-3">
+        <select id="${prefix}_S${i}" onchange="updateSelectColor(this)" class="w-full bg-white border border-slate-300 rounded-lg p-1.5 text-xs outline-none">
+          <option value="">-- Pilih --</option>
+          <option value="Good">Good</option>
+          <option value="Pending">Pending</option>
+          <option value="Issue">Issue</option>
+        </select>
+      </td>
+      <td class="py-2 px-3"><input type="text" id="${prefix}_N${i}" placeholder="Catatan..." class="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-xs focus:bg-white focus:border-[#17431f] outline-none"></td>
+    </tr>`;
+  });
+  html += `</tbody></table>`;
+  document.getElementById(containerId).innerHTML = html;
+}
+
+function updateSelectColor(sel) {
+  sel.classList.remove('status-Good', 'status-Pending', 'status-Issue');
+  if (sel.value) sel.classList.add('status-' + sel.value);
+}
+
+function setAllGood(prefix) {
+  document.querySelectorAll(`[id^="${prefix}_S"]`).forEach(sel => {
+    sel.value = 'Good';
+    updateSelectColor(sel);
+  });
+}
+
+// ==================== VILLA DINAMIS ====================
+function addVillaBlock(selectedVilla = '', itemsData = []) {
+  villaCount++;
+  const vIdx = villaCount;
+  const isFirst = vIdx === 1;
+
+  const tabBtn = `<button type="button" id="vtab_btn_${vIdx}" onclick="switchVillaTab(${vIdx})" class="vtab-btn ${isFirst ? 'bg-[#17431f] text-white' : 'bg-slate-100 text-slate-700'} px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition">
+    Villa #${vIdx} <span id="vtab_label_${vIdx}">${selectedVilla ? '('+selectedVilla+')' : ''}</span>
+  </button>`;
+  document.getElementById('villaSubTabs').insertAdjacentHTML('beforeend', tabBtn);
+
+  let optionsHtml = `<option value="">-- Pilih Unit Villa --</option>`;
+  VILLA_ENUM.forEach(v => {
+    optionsHtml += `<option value="${v}" ${v === selectedVilla ? 'selected' : ''}>${v}</option>`;
+  });
+
+  let rowsHtml = '';
+  VILLA_ITEMS.forEach((it, idx) => {
+    const i = idx + 1;
+    const st = itemsData[idx] ? itemsData[idx].status : '';
+    const nt = itemsData[idx] ? itemsData[idx].notes : '';
+    rowsHtml += `<tr class="hover:bg-slate-50/80">
+      <td class="py-2 px-3 text-center text-slate-400 font-semibold">${i}</td>
+      <td class="py-2 px-3"><span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[10px] font-bold">${it[0]}</span></td>
+      <td class="py-2 px-3 font-medium text-slate-700">${it[1]}</td>
+      <td class="py-2 px-3">
+        <select id="V${vIdx}_S${i}" onchange="updateSelectColor(this)" class="w-full bg-white border border-slate-300 rounded-lg p-1.5 text-xs outline-none ${st ? 'status-'+st : ''}">
+          <option value="">-- Pilih --</option>
+          <option value="Good" ${st==='Good'?'selected':''}>Good</option>
+          <option value="Pending" ${st==='Pending'?'selected':''}>Pending</option>
+          <option value="Issue" ${st==='Issue'?'selected':''}>Issue</option>
+        </select>
+      </td>
+      <td class="py-2 px-3"><input type="text" id="V${vIdx}_N${i}" value="${nt}" placeholder="Catatan..." class="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-xs focus:bg-white focus:border-[#17431f] outline-none"></td>
+    </tr>`;
+  });
+
+  const removeBtn = vIdx > 2 ? `<button type="button" onclick="removeVillaBlock(${vIdx})" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-bold px-3 py-1.5 rounded-lg"><i class="fa-solid fa-trash mr-1"></i> Hapus</button>` : '';
+
+  const paneHtml = `<div id="vpane_${vIdx}" class="vpane ${isFirst ? '' : 'hidden'} space-y-3">
+    <div class="bg-emerald-50/60 p-3 rounded-xl border border-emerald-200 flex flex-wrap justify-between items-center gap-2">
+      <div class="flex items-center gap-2">
+        <label class="text-xs font-extrabold text-[#17431f]">Unit Villa #${vIdx}:</label>
+        <select id="VillaName_${vIdx}" onchange="document.getElementById('vtab_label_${vIdx}').innerText = this.value ? '('+this.value+')' : ''" class="bg-white border border-emerald-300 text-[#17431f] font-bold rounded-lg px-3 py-1.5 text-xs outline-none">
+          ${optionsHtml}
+        </select>
+      </div>
+      <div class="flex gap-2">
+        <button type="button" onclick="setAllGood('V${vIdx}')" class="bg-white hover:bg-emerald-100 text-[#17431f] border border-emerald-300 text-xs font-bold px-3 py-1.5 rounded-lg">Set Semua "Good"</button>
+        ${removeBtn}
+      </div>
+    </div>
+    <div class="overflow-x-auto rounded-xl border border-slate-200">
+      <table class="w-full text-left border-collapse text-xs min-w-[580px]">
+        <thead><tr class="bg-slate-50 text-slate-500 uppercase text-[10px] font-extrabold border-b border-slate-200">
+          <th class="py-2.5 px-3 w-10 text-center">#</th><th class="py-2.5 px-3 w-28">Floor</th><th class="py-2.5 px-3">Item Checklist</th><th class="py-2.5 px-3 w-32">Status</th><th class="py-2.5 px-3 w-52">Notes</th>
+        </tr></thead>
+        <tbody class="divide-y divide-slate-100">${rowsHtml}</tbody>
+      </table>
+    </div>
+  </div>`;
+  document.getElementById('villaSubContent').insertAdjacentHTML('beforeend', paneHtml);
+}
+
+function switchVillaTab(vIdx) {
+  document.querySelectorAll('.vpane').forEach(p => p.classList.add('hidden'));
+  document.querySelectorAll('.vtab-btn').forEach(b => {
+    b.classList.remove('bg-[#17431f]', 'text-white');
+    b.classList.add('bg-slate-100', 'text-slate-700');
+  });
+  document.getElementById('vpane_' + vIdx).classList.remove('hidden');
+  const btn = document.getElementById('vtab_btn_' + vIdx);
+  btn.classList.add('bg-[#17431f]', 'text-white');
+  btn.classList.remove('bg-slate-100', 'text-slate-700');
+}
+
+function removeVillaBlock(vIdx) {
+  document.getElementById('vtab_btn_' + vIdx).remove();
+  document.getElementById('vpane_' + vIdx).remove();
+  switchVillaTab(1);
+}
+
+// ==================== STAFF IN CHARGE DINAMIS ====================
+function addStaffRow(dept = 'FO', name = '', shift = 'Morning Shift') {
+  const deptOpts = DEPT_ENUM.map(d => `<option value="${d}" ${d===dept?'selected':''}>${d}</option>`).join('');
+  const shiftOpts = SHIFT_ENUM.map(s => `<option value="${s}" ${s===shift?'selected':''}>${s}</option>`).join('');
+  const tr = `<tr>
+    <td class="p-2"><select class="staff-dept w-full bg-slate-50 border border-slate-200 rounded-lg p-2 font-bold text-[#17431f] outline-none">${deptOpts}</select></td>
+    <td class="p-2"><input type="text" value="${name}" placeholder="Nama karyawan..." class="staff-name w-full bg-slate-50 border border-slate-200 rounded-lg p-2 outline-none focus:bg-white focus:border-[#17431f]"></td>
+    <td class="p-2"><select class="staff-shift w-full bg-slate-50 border border-slate-200 rounded-lg p-2 outline-none">${shiftOpts}</select></td>
+    <td class="p-2 text-center"><button type="button" onclick="this.closest('tr').remove()" class="text-red-500 hover:bg-red-50 p-2 rounded-lg"><i class="fa-solid fa-trash"></i></button></td>
+  </tr>`;
+  document.getElementById('staffTableBody').insertAdjacentHTML('beforeend', tr);
+}
+
+// ==================== SIMPAN DATA + SINKRON ISSUE ====================
+function collectFormPayload() {
+  const getSectionData = (prefix, count) => {
+    const arr = [];
+    for (let i = 1; i <= count; i++) {
+      arr.push({
+        status: document.getElementById(`${prefix}_S${i}`)?.value || '',
+        notes: document.getElementById(`${prefix}_N${i}`)?.value || ''
+      });
+    }
+    return arr;
+  };
+
+  const villas = [];
+  for (let v = 1; v <= villaCount; v++) {
+    const nameEl = document.getElementById(`VillaName_${v}`);
+    if (nameEl) {
+      villas.push({
+        name: nameEl.value,
+        items: getSectionData(`V${v}`, 81)
+      });
+    }
+  }
+
+  const staff = [];
+  document.querySelectorAll('#staffTableBody tr').forEach(tr => {
+    staff.push({
+      dept: tr.querySelector('.staff-dept').value,
+      name: tr.querySelector('.staff-name').value,
+      shift: tr.querySelector('.staff-shift').value
+    });
+  });
+
+  const forecast = {};
+  document.querySelectorAll('.fc-input').forEach(el => forecast[el.id] = el.value);
+
+  const comments = {};
+  document.querySelectorAll('.com-input').forEach(el => comments[el.id] = el.value);
+
+  return {
+    reportId: currentReportId,
+    pdfUrl: currentPdfUrl,
+    header: {
+      DayDate: document.getElementById('DayDate').value,
+      Time: document.getElementById('Time').value,
+      ModName: document.getElementById('ModName').value,
+      ModPosition: document.getElementById('ModPosition').value
+    },
+    forecast,
+    pa: getSectionData('pa', 23),
+    boh: getSectionData('boh', 33),
+    rest: getSectionData('rest', 16),
+    villas,
+    comments,
+    staff
+  };
+}
+
+function handleSaveData() {
+  const payload = collectFormPayload();
+  showLoader('Menyimpan Data & Merekam Issue...');
+
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      currentReportId = res.reportId;
+      document.getElementById('badgeReportId').innerText = res.reportId;
+      document.getElementById('lastSavedLabel').innerText = 'Tersimpan: ' + res.lastUpdated;
+      refreshOpenIssueBadge();
+      const extraMsg = res.issueCount > 0 ? `\nDitemukan ${res.issueCount} item "Issue" yang otomatis masuk ke menu History Issue.` : '';
+      alert('Data berhasil disimpan! (ID: ' + currentReportId + ')' + extraMsg);
+    })
+    .withFailureHandler(err => {
+      hideLoader();
+      alert('Gagal menyimpan data: ' + err.message);
+    })
+    .saveMODDraft(payload);
+}
+
+// ==================== HISTORY ISSUE & DISPATCH KE HOD ====================
+function refreshOpenIssueBadge() {
+  google.script.run
+    .withSuccessHandler(issues => {
+      allIssuesList = issues || [];
+      const openCount = allIssuesList.filter(i => i.issueStatus === 'Open').length;
+      const badge = document.getElementById('sidebarOpenIssueBadge');
+      if (openCount > 0) {
+        badge.innerText = openCount;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    })
+    .getHistoryIssues();
+}
+
+function loadHistoryIssues() {
+  showLoader('Memuat Daftar History Issue...');
+  google.script.run
+    .withSuccessHandler(issues => {
+      allIssuesList = issues || [];
+      selectedIssueIds.clear();
+      document.getElementById('checkAllIssues').checked = false;
+      renderIssuesTable();
+      refreshOpenIssueBadge();
+      hideLoader();
+    })
+    .withFailureHandler(err => {
+      hideLoader();
+      alert('Gagal memuat History Issue: ' + err.message);
+    })
+    .getHistoryIssues();
+}
+
+function getFilteredIssues() {
+  const area = document.getElementById('issueAreaFilter').value;
+  const st = document.getElementById('issueStatusFilter').value;
+  const q = document.getElementById('issueSearchInput').value.toLowerCase();
+
+  return allIssuesList.filter(it => {
+    const matchArea = !area || it.areaCategory === area;
+    const matchStatus = !st || it.issueStatus === st;
+    const matchText = (it.subAreaUnit + it.itemChecklist + it.notes + it.modName + it.dayDate).toLowerCase().includes(q);
+    return matchArea && matchStatus && matchText;
+  });
+}
+
+function renderIssuesTable() {
+  const filtered = getFilteredIssues();
+  const tbody = document.getElementById('issuesTableBody');
+  tbody.innerHTML = '';
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400">Tidak ada data issue pada filter ini.</td></tr>`;
+    updateSelectedIssueCounter();
+    return;
+  }
+
+  filtered.forEach(it => {
+    const isChecked = selectedIssueIds.has(it.issueId) ? 'checked' : '';
+    const isResolved = it.issueStatus === 'Resolved';
+    const areaBadgeColor = it.areaCategory.includes('Villa') ? 'bg-purple-100 text-purple-800' :
+                           it.areaCategory.includes('Restaurant') ? 'bg-orange-100 text-orange-800' :
+                           it.areaCategory.includes('Public') ? 'bg-teal-100 text-teal-800' : 'bg-blue-100 text-blue-800';
+
+    tbody.insertAdjacentHTML('beforeend', `<tr class="hover:bg-slate-50">
+      <td class="py-3 px-3 text-center">
+        <input type="checkbox" ${isChecked} onchange="toggleSingleIssue('${it.issueId}', this.checked)" class="rounded border-slate-300 text-[#17431f] focus:ring-[#17431f]">
+      </td>
+      <td class="py-3 px-3">
+        <div class="font-bold text-slate-700">${it.dayDate}</div>
+        <div class="text-[10px] text-slate-400">MOD: ${it.modName}</div>
+      </td>
+      <td class="py-3 px-3"><span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold ${areaBadgeColor}">${it.areaCategory}</span></td>
+      <td class="py-3 px-3 font-bold text-slate-800">${it.subAreaUnit}</td>
+      <td class="py-3 px-3 font-medium text-slate-700">${it.itemChecklist}</td>
+      <td class="py-3 px-3 text-red-700 font-semibold">${it.notes}</td>
+      <td class="py-3 px-3 text-center">
+        <button type="button" onclick="toggleIssueResolvedStatus('${it.issueId}', '${isResolved ? 'Open' : 'Resolved'}')" class="px-3 py-1 rounded-lg text-[10px] font-extrabold border transition ${isResolved ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-red-100 text-red-800 border-red-300'}">
+          ${isResolved ? '<i class="fa-solid fa-check mr-1"></i>Resolved' : '<i class="fa-solid fa-clock mr-1"></i>Open'}
+        </button>
+      </td>
+    </tr>`);
+  });
+
+  updateSelectedIssueCounter();
+}
+
+function toggleSingleIssue(issueId, checked) {
+  if (checked) selectedIssueIds.add(issueId);
+  else selectedIssueIds.delete(issueId);
+  updateSelectedIssueCounter();
+}
+
+function toggleSelectAllIssues(masterCb) {
+  const filtered = getFilteredIssues();
+  filtered.forEach(it => {
+    if (masterCb.checked) selectedIssueIds.add(it.issueId);
+    else selectedIssueIds.delete(it.issueId);
+  });
+  renderIssuesTable();
+}
+
+function updateSelectedIssueCounter() {
+  document.getElementById('selectedIssueCounter').innerText = `${selectedIssueIds.size} Terpilih`;
+}
+
+function toggleIssueResolvedStatus(issueId, nextStatus) {
+  showLoader('Memperbarui Status Issue...');
+  google.script.run
+    .withSuccessHandler(() => {
+      hideLoader();
+      loadHistoryIssues();
+    })
+    .withFailureHandler(err => {
+      hideLoader();
+      alert('Gagal mengubah status: ' + err.message);
+    })
+    .updateIssueStatus(issueId, nextStatus);
+}
+
+function exportSelectedIssuesPDF() {
+  let chosen = allIssuesList.filter(it => selectedIssueIds.has(it.issueId));
+  if (chosen.length === 0) {
+    chosen = getFilteredIssues();
+  }
+  if (chosen.length === 0) {
+    return alert('Tidak ada data issue yang dapat di-export.');
+  }
+
+  const areaLabel = document.getElementById('issueAreaFilter').value || 'All Areas';
+  showLoader(`Membuat PDF Rekap ${chosen.length} Issue...`);
+
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      lastExportedIssuePdfId = res.fileId;
+
+      const emailBtn = document.getElementById('btnSendIssueEmail');
+      emailBtn.disabled = false;
+      emailBtn.className = 'bg-[#17431f] hover:bg-[#103016] text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-sm transition flex items-center gap-1.5';
+
+      if (res.pdfBase64) {
+        const blobUrl = base64ToBlobUrl(res.pdfBase64);
+        document.getElementById('pdfModalTitle').innerText = `Preview Rekap Issue (${areaLabel})`;
+        document.getElementById('pdfExternalLink').href = res.pdfUrl;
+        document.getElementById('pdfPreviewIframe').src = blobUrl;
+        document.getElementById('pdfPreviewModal').classList.remove('hidden');
+      } else {
+        window.open(res.pdfUrl, '_blank');
+      }
+    })
+    .withFailureHandler(err => {
+      hideLoader();
+      alert('Gagal Export Issue PDF: ' + err.message);
+    })
+    .generateIssuePDFReport(chosen, areaLabel);
+}
+
+function openIssueEmailModal() {
+  if (!lastExportedIssuePdfId) {
+    return alert('Klik "Export Issue PDF" terlebih dahulu sebelum mengirim email.');
+  }
+  const areaLabel = document.getElementById('issueAreaFilter').value || 'All Areas';
+  document.getElementById('issueEmailSubject').value = `MOD Issue Follow-Up Report (${areaLabel}) - Seahaven Villas`;
+  document.getElementById('issueEmailBody').value = `Dear HOD Team,\n\nTerlampir adalah rekap temuan MOD Issue untuk kategori ${areaLabel}. Mohon bantuan tim untuk segera melakukan perbaikan dan follow-up.\n\nTerima kasih,\n${currentUser ? currentUser.fullName : 'MOD Seahaven'}`;
+  document.getElementById('issueEmailModal').classList.remove('hidden');
+}
+
+function closeIssueEmailModal() {
+  document.getElementById('issueEmailModal').classList.add('hidden');
+}
+
+function applyHODPreset(type) {
+  if (!hodDirectory || hodDirectory.length === 0) {
+    return alert('Daftar email HOD di sheet Users_HOD belum terisi. Silakan ketik email tujuan secara manual.');
+  }
+  let matched = [];
+  if (type === 'ENG') {
+    matched = hodDirectory.filter(h => (h.position + h.name + h.email).toLowerCase().match(/eng|chief|maintenance/));
+  } else if (type === 'HK') {
+    matched = hodDirectory.filter(h => (h.position + h.name + h.email).toLowerCase().match(/house|hk|exec/));
+  } else {
+    matched = hodDirectory;
+  }
+
+  if (matched.length === 0) {
+    alert('Email untuk departemen tersebut belum ditemukan di sheet Users_HOD, menampilkan semua HOD.');
+    matched = hodDirectory;
+  }
+  document.getElementById('issueEmailTo').value = matched.map(m => m.email).join(', ');
+}
+
+function submitIssueEmail() {
+  const to = document.getElementById('issueEmailTo').value.trim();
+  const cc = document.getElementById('issueEmailCc').value.trim();
+  const subj = document.getElementById('issueEmailSubject').value.trim();
+  const body = document.getElementById('issueEmailBody').value.trim();
+  if (!to) return alert('Email tujuan HOD wajib diisi!');
+
+  closeIssueEmailModal();
+  showLoader('Mengirim Rekap Issue ke HOD...');
+  google.script.run
+    .withSuccessHandler(() => {
+      hideLoader();
+      alert('Rekap Issue PDF berhasil dikirim ke ' + to);
+    })
+    .withFailureHandler(err => {
+      hideLoader();
+      alert('Gagal mengirim email: ' + err.message);
+    })
+    .sendIssueReportEmail(lastExportedIssuePdfId, to, cc, subj, body);
+}
+
+// ==================== HISTORY UTAMA, EDIT, EXPORT ALL DATA PDF & PRINT ====================
+function loadHistory() {
+  showLoader('Memuat Riwayat Laporan...');
+  google.script.run
+    .withSuccessHandler(reports => {
+      allHistoryReports = reports || [];
+      renderHistoryTable();
+      hideLoader();
+    })
+    .withFailureHandler(err => {
+      hideLoader();
+      alert('Gagal memuat riwayat: ' + err.message);
+    })
+    .getMODReports();
+}
+
+function renderHistoryTable() {
+  const q = document.getElementById('filterSearch').value.toLowerCase();
+  const stFilter = document.getElementById('filterStatus').value;
+  const tbody = document.getElementById('historyTableBody');
+  tbody.innerHTML = '';
+
+  const filtered = allHistoryReports.filter(r => {
+    const matchText = (r.dayDate + r.modName + r.villasChecked + r.reportId).toLowerCase().includes(q);
+    let matchStatus = true;
+    if (stFilter === 'Draft') {
+      matchStatus = r.statusDoc === 'Draft';
+    } else if (stFilter === 'Final') {
+      matchStatus = r.statusDoc.includes('Final') || r.statusDoc.includes('Sent');
+    } else if (stFilter === 'Sent') {
+      matchStatus = r.statusDoc.includes('Sent');
+    }
+    return matchText && matchStatus;
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400">Tidak ada data pada filter "${stFilter || 'Semua Status'}".</td></tr>`;
+    return;
+  }
+
+  filtered.forEach(r => {
+    const isExported = Boolean(r.pdfUrl) || r.statusDoc.includes('Final') || r.statusDoc.includes('Sent');
+    const badge = r.statusDoc.includes('Sent') ? 'bg-blue-100 text-blue-800' : (isExported ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800');
+    
+    const emailBtn = isExported
+      ? `<button type="button" onclick="openEmailModal('${r.reportId}')" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-2.5 py-1.5 rounded-lg font-bold transition" title="Kirim PDF via Email"><i class="fa-solid fa-envelope"></i></button>`
+      : `<button type="button" disabled class="bg-slate-100 text-slate-300 border border-slate-200 px-2.5 py-1.5 rounded-lg font-bold cursor-not-allowed" title="Export PDF terlebih dahulu untuk mengaktifkan Email"><i class="fa-solid fa-envelope"></i></button>`;
+
+    tbody.insertAdjacentHTML('beforeend', `<tr class="hover:bg-slate-50">
+      <td class="py-3 px-4 font-bold text-slate-700">${r.reportId}</td>
+      <td class="py-3 px-4">${r.dayDate}</td>
+      <td class="py-3 px-4 font-semibold">${r.modName}</td>
+      <td class="py-3 px-4 text-slate-500">${r.villasChecked}</td>
+      <td class="py-3 px-4"><span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold ${badge}">${r.statusDoc}</span></td>
+      <td class="py-3 px-4 text-slate-400">${r.lastUpdated}</td>
+      <td class="py-3 px-4 text-right space-x-1.5 whitespace-nowrap">
+        <button type="button" onclick="loadDraftToForm('${r.reportId}')" class="bg-slate-100 hover:bg-emerald-100 text-[#17431f] px-3 py-1.5 rounded-lg font-bold transition" title="Edit Checklist 1-8">
+          <i class="fa-solid fa-pen-to-square mr-1"></i>Edit
+        </button>
+        <button type="button" onclick="exportAllDataPDF('${r.reportId}')" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg font-bold transition" title="Export Semua Data Checklist 1-8 ke PDF">
+          <i class="fa-solid fa-file-pdf mr-1"></i>Export All Data PDF
+        </button>
+        <button type="button" onclick="printReportPDF('${r.reportId}')" class="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-3 py-1.5 rounded-lg font-bold transition" title="Langsung ke Halaman Printer">
+          <i class="fa-solid fa-print mr-1"></i>Print
+        </button>
+        ${emailBtn}
+      </td>
+    </tr>`);
+  });
+}
+
+function exportAllDataPDF(reportId) {
+  showLoader('Menarik Data 1–8 & Membuat Popup PDF...');
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      document.getElementById('filterStatus').value = 'Final';
+      loadHistory();
+
+      if (res.pdfBase64) {
+        const blobUrl = base64ToBlobUrl(res.pdfBase64);
+        document.getElementById('pdfModalTitle').innerText = `Preview PDF - ${reportId}`;
+        document.getElementById('pdfExternalLink').href = res.pdfUrl;
+        document.getElementById('pdfPreviewIframe').src = blobUrl;
+        document.getElementById('pdfPreviewModal').classList.remove('hidden');
+      } else {
+        window.open(res.pdfUrl, '_blank');
+      }
+    })
+    .withFailureHandler(err => {
+      hideLoader();
+      alert('Gagal Export PDF: ' + err.message);
+    })
+    .generatePDFReport(reportId, true);
+}
+
+function closePdfPreviewModal() {
+  document.getElementById('pdfPreviewModal').classList.add('hidden');
+  document.getElementById('pdfPreviewIframe').src = '';
+}
+
+function printReportPDF(reportId) {
+  const printWin = window.open('', '_blank', 'width=950,height=720');
+  if (printWin) {
+    printWin.document.write('<html><head><title>Menyiapkan Print...</title></head><body style="font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;background:#f8fafc;color:#17431f;"><h3>Menyiapkan dokumen PDF untuk dicetak...</h3></body></html>');
+  }
+
+  showLoader('Menyiapkan Halaman Printer...');
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      document.getElementById('filterStatus').value = 'Final';
+      loadHistory();
+
+      if (res.pdfBase64) {
+        const blobUrl = base64ToBlobUrl(res.pdfBase64);
+        if (printWin) {
+          printWin.location.href = blobUrl;
+          setTimeout(() => {
+            try {
+              printWin.focus();
+              printWin.print();
+            } catch (e) {}
+          }, 900);
+        } else {
+          window.open(blobUrl, '_blank');
+        }
+      } else {
+        if (printWin) printWin.location.href = res.pdfUrl;
+      }
+    })
+    .withFailureHandler(err => {
+      hideLoader();
+      if (printWin) printWin.close();
+      alert('Gagal menyiapkan cetak PDF: ' + err.message);
+    })
+    .generatePDFReport(reportId, true);
+}
+
+function base64ToBlobUrl(base64) {
+  const byteCharacters = atob(base64);
+  const byteNumbers = new Array(byteCharacters.length);
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i);
+  }
+  const blob = new Blob([new Uint8Array(byteNumbers)], { type: 'application/pdf' });
+  return URL.createObjectURL(blob);
+}
+
+function loadDraftToForm(reportId) {
+  showLoader('Membuka Draft Laporan...');
+  google.script.run
+    .withSuccessHandler(res => {
+      hideLoader();
+      if (!res || !res.payload) return alert('Data draft tidak ditemukan.');
+      const p = res.payload;
+
+      currentReportId = p.reportId;
+      currentPdfUrl = res.pdfUrl || '';
+      document.getElementById('badgeReportId').innerText = p.reportId;
+      document.getElementById('lastSavedLabel').innerText = 'Terakhir disimpan: ' + res.lastUpdated;
+
+      Object.entries(p.header || {}).forEach(([k, v]) => { if(document.getElementById(k)) document.getElementById(k).value = v; });
+      Object.entries(p.forecast || {}).forEach(([k, v]) => { if(document.getElementById(k)) document.getElementById(k).value = v; });
+      Object.entries(p.comments || {}).forEach(([k, v]) => { if(document.getElementById(k)) document.getElementById(k).value = v; });
+
+      const fillSection = (prefix, arr) => {
+        (arr || []).forEach((it, idx) => {
+          const sel = document.getElementById(`${prefix}_S${idx+1}`);
+          const inp = document.getElementById(`${prefix}_N${idx+1}`);
+          if (sel) { sel.value = it.status || ''; updateSelectColor(sel); }
+          if (inp) inp.value = it.notes || '';
+        });
+      };
+      fillSection('pa', p.pa);
+      fillSection('boh', p.boh);
+      fillSection('rest', p.rest);
+
+      villaCount = 0;
+      document.getElementById('villaSubTabs').innerHTML = '';
+      document.getElementById('villaSubContent').innerHTML = '';
+      if (p.villas && p.villas.length > 0) {
+        p.villas.forEach(v => addVillaBlock(v.name, v.items));
+      } else {
+        addVillaBlock(); addVillaBlock();
+      }
+
+      document.getElementById('staffTableBody').innerHTML = '';
+      (p.staff || []).forEach(st => addStaffRow(st.dept, st.name, st.shift));
+
+      openCatTab(1);
+    })
+    .withFailureHandler(err => {
+      hideLoader();
+      alert('Gagal memuat draft: ' + err.message);
+    })
+    .getReportPayloadById(reportId);
+}
+
+function openEmailModal(reportId) {
+  document.getElementById('emailReportId').value = reportId;
+  document.getElementById('emailModal').classList.remove('hidden');
+}
+function closeEmailModal() {
+  document.getElementById('emailModal').classList.add('hidden');
+}
+function submitEmail() {
+  const reportId = document.getElementById('emailReportId').value;
+  const to = document.getElementById('emailTo').value;
+  const cc = document.getElementById('emailCc').value;
+  const body = document.getElementById('emailBody').value;
+  if (!to) return alert('Email tujuan wajib diisi!');
+
+  closeEmailModal();
+  showLoader('Mengirim PDF via Email...');
+  google.script.run
+    .withSuccessHandler(() => {
+      hideLoader();
+      alert('Laporan berhasil dikirim ke ' + to);
+      document.getElementById('filterStatus').value = 'Sent';
+      loadHistory();
+    })
+    .withFailureHandler(err => { hideLoader(); alert('Gagal mengirim email: ' + err.message); })
+    .sendReportEmail(reportId, to, cc, body);
+}
+</script>
+</body>
+</html>
