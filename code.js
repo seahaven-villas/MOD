@@ -1,5 +1,5 @@
 // ==============================================================================
-// MOD REPORT SYSTEM - BACKEND (Code.gs) - WITH HISTORY ISSUE & HOD DISPATCH
+// MOD REPORT SYSTEM - BACKEND (code.js) - PHASE 1: HARDENED & OPTIMIZED
 // Seahaven by Kamuela - Bali
 // ==============================================================================
 
@@ -163,6 +163,24 @@ function checkHODLogin(username, password) {
 }
 
 /**
+ * 2C. Single Bootstrap Endpoint (Untuk UI Phase 2 - Sekali Panggil Saat Masuk Dashboard)
+ */
+function getInitialDashboardData() {
+  const issues = getHistoryIssues();
+  const openCount = issues.filter(i => i.issueStatus === 'Open').length;
+  return {
+    hodEmails: getHODEmailsList(),
+    openIssueCount: openCount,
+    masterChecklist: {
+      pa: PA_MASTER_ROWS,
+      boh: BOH_MASTER_ROWS,
+      rest: REST_MASTER_ROWS,
+      villa: VILLA_MASTER_ROWS
+    }
+  };
+}
+
+/**
  * Ambil Daftar Email HOD dari Sheet Users_HOD untuk Preset Kirim Email
  */
 function getHODEmailsList() {
@@ -268,67 +286,81 @@ function getReportPayloadById(reportId) {
 
 /**
  * 5. Simpan / Update Data Checklist 1-8 + Ekstrak Otomatis Item Berstatus "Issue" ke MOD_Issues
+ *    Dilindungi LockService untuk mencegah data tumpang tindih.
  */
 function saveMODDraft(payload) {
-  const sheet = getOrCreateReportSheet();
-  const lastRow = sheet.getLastRow();
-  const now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd MMM yyyy HH:mm');
-  
-  const villasList = (payload.villas || [])
-    .map(v => v.name)
-    .filter(n => n)
-    .join(', ');
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(15000);
 
-  let targetRow = -1;
-  if (payload.reportId && lastRow > 1) {
-    const ids = sheet.getRange(2, 1, lastRow - 1, 1).getDisplayValues();
-    for (let i = 0; i < ids.length; i++) {
-      if (ids[i][0] === payload.reportId) {
-        targetRow = i + 2;
-        break;
+    const sheet = getOrCreateReportSheet();
+    const lastRow = sheet.getLastRow();
+    const tz = Session.getScriptTimeZone();
+    const now = Utilities.formatDate(new Date(), tz, 'dd MMM yyyy HH:mm');
+    
+    const villasList = (payload.villas || [])
+      .map(v => v.name)
+      .filter(n => n)
+      .join(', ');
+
+    let targetRow = -1;
+    let currentStatusDoc = 'Draft';
+
+    if (payload.reportId && lastRow > 1) {
+      const meta = sheet.getRange(2, 1, lastRow - 1, 6).getDisplayValues();
+      for (let i = 0; i < meta.length; i++) {
+        if (meta[i][0] === payload.reportId) {
+          targetRow = i + 2;
+          currentStatusDoc = meta[i][5] || 'Draft';
+          break;
+        }
       }
+    } else {
+      payload.reportId = 'MOD-' + Utilities.formatDate(new Date(), tz, 'yyyyMMdd-HHmmss');
     }
-  } else {
-    payload.reportId = 'MOD-' + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyyMMdd-HHmmss');
+
+    const rowValues = [
+      payload.reportId,
+      payload.header.DayDate || '',
+      payload.header.Time || '',
+      payload.header.ModName || '',
+      payload.header.ModPosition || '',
+      currentStatusDoc,
+      now,
+      villasList || 'Belum ada villa',
+      payload.pdfUrl || '',
+      JSON.stringify(payload)
+    ];
+
+    if (targetRow > 0) {
+      sheet.getRange(targetRow, 1, 1, rowValues.length).setValues([rowValues]);
+    } else {
+      sheet.appendRow(rowValues);
+    }
+
+    // Sinkronisasi otomatis semua item dengan status "Issue" ke sheet MOD_Issues
+    const issueCount = syncIssuesFromPayload(payload, now);
+
+    return { status: 'Success', reportId: payload.reportId, lastUpdated: now, issueCount: issueCount };
+  } catch (e) {
+    throw new Error('Server sibuk saat menyimpan data, silakan coba sesaat lagi. (' + e.message + ')');
+  } finally {
+    lock.releaseLock();
   }
-
-  const rowValues = [
-    payload.reportId,
-    payload.header.DayDate || '',
-    payload.header.Time || '',
-    payload.header.ModName || '',
-    payload.header.ModPosition || '',
-    'Draft',
-    now,
-    villasList || 'Belum ada villa',
-    payload.pdfUrl || '',
-    JSON.stringify(payload)
-  ];
-
-  if (targetRow > 0) {
-    sheet.getRange(targetRow, 1, 1, rowValues.length).setValues([rowValues]);
-  } else {
-    sheet.appendRow(rowValues);
-  }
-
-  // Sinkronisasi otomatis semua item dengan status "Issue" ke sheet MOD_Issues
-  const issueCount = syncIssuesFromPayload(payload, now);
-
-  return { status: 'Success', reportId: payload.reportId, lastUpdated: now, issueCount: issueCount };
 }
 
 /**
- * Sinkronisasi Item Berstatus "Issue" ke Sheet MOD_Issues
+ * Sinkronisasi Item Berstatus "Issue" ke Sheet MOD_Issues (Safe Incremental Update)
  */
 function syncIssuesFromPayload(payload, timestamp) {
   const issueSheet = getOrCreateIssueSheet();
   const lastRow = issueSheet.getLastRow();
   const existingStatusMap = {};
+  const keepRows = [];
 
-  // Pertahankan status "Resolved" jika issueId yang sama sebelumnya sudah diselesaikan
+  // Pisahkan baris milik report lain agar tidak terhapus, dan simpan status Resolved untuk report ini
   if (lastRow > 1) {
     const oldData = issueSheet.getRange(2, 1, lastRow - 1, 10).getValues();
-    const keepRows = [];
     oldData.forEach(r => {
       if (String(r[1]) === String(payload.reportId)) {
         existingStatusMap[String(r[0])] = r[8];
@@ -336,10 +368,6 @@ function syncIssuesFromPayload(payload, timestamp) {
         keepRows.push(r);
       }
     });
-    issueSheet.getRange(2, 1, lastRow - 1, 10).clearContent();
-    if (keepRows.length > 0) {
-      issueSheet.getRange(2, 1, keepRows.length, 10).setValues(keepRows);
-    }
   }
 
   const newIssues = [];
@@ -389,9 +417,14 @@ function syncIssuesFromPayload(payload, timestamp) {
     });
   });
 
-  if (newIssues.length > 0) {
-    const startRow = issueSheet.getLastRow() + 1;
-    issueSheet.getRange(startRow, 1, newIssues.length, 10).setValues(newIssues);
+  const combinedRows = keepRows.concat(newIssues);
+
+  // Tulis ulang baris data secara utuh dan bersih
+  if (lastRow > 1) {
+    issueSheet.getRange(2, 1, lastRow - 1, 10).clearContent();
+  }
+  if (combinedRows.length > 0) {
+    issueSheet.getRange(2, 1, combinedRows.length, 10).setValues(combinedRows);
   }
 
   return newIssues.length;
@@ -408,6 +441,7 @@ function getHistoryIssues() {
   const data = sheet.getRange(2, 1, lastRow - 1, 10).getDisplayValues();
   const issues = [];
   for (let i = data.length - 1; i >= 0; i--) {
+    if (!data[i][0]) continue;
     issues.push({
       issueId: data[i][0] || '',
       reportId: data[i][1] || '',
@@ -425,21 +459,39 @@ function getHistoryIssues() {
 }
 
 /**
- * Update Status Tindak Lanjut Issue (Open <-> Resolved)
+ * Update Status Tindak Lanjut Issue (Open <-> Resolved) dengan LockService
  */
 function updateIssueStatus(issueId, newStatus) {
-  const sheet = getOrCreateIssueSheet();
-  const lastRow = sheet.getLastRow();
-  if (lastRow <= 1) return { status: 'Error' };
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000);
+    const sheet = getOrCreateIssueSheet();
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 1) return { status: 'Error' };
 
-  const ids = sheet.getRange(2, 1, lastRow - 1, 1).getDisplayValues();
-  for (let i = 0; i < ids.length; i++) {
-    if (String(ids[i][0]) === String(issueId)) {
-      sheet.getRange(i + 2, 9).setValue(newStatus);
-      return { status: 'Success' };
+    const ids = sheet.getRange(2, 1, lastRow - 1, 1).getDisplayValues();
+    for (let i = 0; i < ids.length; i++) {
+      if (String(ids[i][0]) === String(issueId)) {
+        sheet.getRange(i + 2, 9).setValue(newStatus);
+        return { status: 'Success' };
+      }
     }
+    return { status: 'NotFound' };
+  } finally {
+    lock.releaseLock();
   }
-  return { status: 'NotFound' };
+}
+
+/**
+ * Helper Keamanan Sharing Drive File (Batasi ke Domain Internal Seahaven)
+ */
+function applyInternalDriveSharing(file) {
+  try {
+    file.setSharing(DriveApp.Access.DOMAIN_WITH_LINK, DriveApp.Permission.VIEW);
+  } catch (e) {
+    // Fallback jika dijalankan dari akun non-Google Workspace (tetap Restricted ke internal folder)
+    console.warn('DOMAIN_WITH_LINK tidak didukung pada akun ini, menggunakan izin default folder.');
+  }
 }
 
 /**
@@ -524,7 +576,7 @@ function generateIssuePDFReport(selectedIssues, areaFilterLabel) {
 
   const pdfBlob = docFile.getAs(MimeType.PDF);
   const pdfFile = parentFolder.createFile(pdfBlob).setName(fileName + '.pdf');
-  pdfFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  applyInternalDriveSharing(pdfFile);
   docFile.setTrashed(true);
 
   return {
@@ -651,7 +703,7 @@ function generatePDFReport(reportId, returnBase64) {
 
   const pdfBlob = tempCopy.getAs(MimeType.PDF);
   const pdfFile = parentFolder.createFile(pdfBlob).setName(fileName + '.pdf');
-  pdfFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  applyInternalDriveSharing(pdfFile);
   tempCopy.setTrashed(true);
 
   const pdfUrl = pdfFile.getUrl();
