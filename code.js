@@ -1,5 +1,5 @@
 // ==============================================================================
-// MOD REPORT SYSTEM - BACKEND (code.js) - PHASE 2: HTML EMAIL TEMPLATES
+// MOD REPORT SYSTEM - BACKEND (code.js) - PHASE 3: STRICT VALIDATION & 197 KVA
 // Seahaven by Kamuela - Bali
 // ==============================================================================
 
@@ -674,7 +674,6 @@ function sendIssueReportEmail(pdfFileId, recipientEmail, ccEmail, subjectTitle, 
   const pdfFile = DriveApp.getFileById(pdfFileId);
   const pdfUrl = pdfFile.getUrl();
 
-  // Ambil daftar issue Open terbaru untuk ringkasan tabel di badan email
   const openIssues = getHistoryIssues().filter(i => i.issueStatus === 'Open');
   const htmlBody = buildIssueEmailHtml(
     pdfUrl,
@@ -694,6 +693,91 @@ function sendIssueReportEmail(pdfFileId, recipientEmail, ccEmail, subjectTitle, 
   GmailApp.sendEmail(recipientEmail, subjectTitle || 'MOD Issue Follow-Up Report - Seahaven', plainBody, mailOptions);
 
   return { status: 'Success' };
+}
+
+/**
+ * Validasi Kelengkapan Laporan Sebelum Export PDF & Kirim Email
+ */
+function validateMODReportCompleteness(payload) {
+  if (!payload) {
+    throw new Error('Data laporan tidak ditemukan.');
+  }
+
+  const missing = [];
+  const h = payload.header || {};
+  const fc = payload.forecast || {};
+  const com = payload.comments || {};
+
+  // 1. Cek Header
+  if (!String(h.DayDate || '').trim() || !String(h.Time || '').trim() || !String(h.ModName || '').trim()) {
+    missing.push('• Bagian 1 (Header): Day/Date, Shift Time, dan MOD Name wajib diisi.');
+  }
+
+  // 2. Cek General Forecast
+  const forecastKeys = [
+    ['LastOcc', 'Last Night Occupancy'], ['LastRoom', 'Last Night Room Sold'], ['LastARR', 'Last Night ARR'],
+    ['TodOcc', "Today's Occupancy"], ['TodRoom', "Today's Room Sold"], ['TodARR', "Today's ARR"],
+    ['TomOcc', 'Tomorrow Occupancy'], ['TomRoom', 'Tomorrow Room Sold'], ['TomARR', 'Tomorrow ARR'],
+    ['FBCover', 'F&B Cover'], ['FBRev', 'F&B Revenue'], ['VIPWelcome', 'VIP Welcome']
+  ];
+  const emptyForecast = forecastKeys.filter(([k]) => !String(fc[k] || '').trim()).map(([, label]) => label);
+  if (emptyForecast.length > 0) {
+    missing.push(`• Bagian 1 (General Forecast): ${emptyForecast.join(', ')} belum diisi.`);
+  }
+
+  // 3. Cek Status Checklist & Notes untuk Issue
+  const checkSection = (items, expectedLen, label) => {
+    let unpicked = 0;
+    let issueNoNotes = 0;
+    const list = items || [];
+    for (let i = 0; i < expectedLen; i++) {
+      const it = list[i] || {};
+      const st = String(it.status || '').trim();
+      if (!st) {
+        unpicked++;
+      } else if (st === 'Issue' && !String(it.notes || '').trim()) {
+        issueNoNotes++;
+      }
+    }
+    if (unpicked > 0) missing.push(`• ${label}: masih ada ${unpicked} item checklist belum dipilih statusnya.`);
+    if (issueNoNotes > 0) missing.push(`• ${label}: ada ${issueNoNotes} item berstatus "Issue" yang belum diisi Notes.`);
+  };
+
+  checkSection(payload.pa, PA_MASTER_ROWS.length, 'Bagian 2 (Public Area)');
+  checkSection(payload.boh, BOH_MASTER_ROWS.length, 'Bagian 3 (BOH & Lobby)');
+  checkSection(payload.rest, REST_MASTER_ROWS.length, 'Bagian 4 (Restaurant)');
+
+  const villas = payload.villas || [];
+  if (villas.length === 0) {
+    missing.push('• Bagian 5 (Villa Checklist): minimal 1 unit Villa wajib diinspeksi.');
+  } else {
+    villas.forEach((v, idx) => {
+      const vName = String(v.name || '').trim();
+      if (!vName) {
+        missing.push(`• Bagian 5 (Villa #${idx + 1}): Nomor/Nama Villa belum diisi.`);
+      }
+      checkSection(v.items, VILLA_MASTER_ROWS.length, `Bagian 5 (${vName || 'Villa #' + (idx + 1)})`);
+    });
+  }
+
+  // 4. Cek Comments & Utilities (Mendukung PLN_197 maupun PLN_192)
+  const pln197Val = String(com.PLN_197 || com.PLN_192 || '').trim();
+  const commentKeys = [
+    ['GuestCom', 'Guest Comments'],
+    ['GenObs', 'General Observation'],
+    ['GWT_Level', 'GWT Level'],
+    ['PLN_53', 'PLN Meter (53 KVA)']
+  ];
+  const emptyComments = commentKeys.filter(([k]) => !String(com[k] || '').trim()).map(([, label]) => label);
+  if (!pln197Val) emptyComments.push('PLN Meter (197 KVA)');
+
+  if (emptyComments.length > 0) {
+    missing.push(`• Bagian 7 (Comments & Utilities): ${emptyComments.join(', ')} belum diisi.`);
+  }
+
+  if (missing.length > 0) {
+    throw new Error('EXPORT & EMAIL DITOLAK — Laporan belum lengkap:\n\n' + missing.join('\n'));
+  }
 }
 
 /**
@@ -718,6 +802,7 @@ function generatePDFReport(reportId, returnBase64) {
   }
 
   if (!payload) throw new Error('Data laporan tidak ditemukan.');
+  validateMODReportCompleteness(payload);
 
   const templateFile = DriveApp.getFileById(TEMPLATE_DOC_ID);
   const parentFolder = templateFile.getParents().hasNext() ? templateFile.getParents().next() : DriveApp.getRootFolder();
@@ -734,6 +819,8 @@ function generatePDFReport(reportId, returnBase64) {
     ...payload.header,
     ...payload.forecast,
     ...payload.comments,
+    PLN_197: payload.comments.PLN_197 || payload.comments.PLN_192 || '-',
+    PLN_192: payload.comments.PLN_197 || payload.comments.PLN_192 || '-',
     Villa1_Name: v1.name || 'N/A',
     Villa2_Name: v2.name || 'N/A'
   };
@@ -889,7 +976,6 @@ function buildMODReportEmailHtml(reportId, payload, pdfUrl, customMessage) {
   const fc = (payload && payload.forecast) ? payload.forecast : {};
   const com = (payload && payload.comments) ? payload.comments : {};
 
-  // Hitung ringkasan status Good / Pending / Issue di semua kategori
   const countStats = (arr) => {
     let good = 0, pending = 0, issue = 0;
     (arr || []).forEach(it => {
@@ -914,7 +1000,6 @@ function buildMODReportEmailHtml(reportId, payload, pdfUrl, customMessage) {
     vIssue += st.issue;
   });
 
-  // Kumpulkan daftar temuan Issue untuk ditampilkan di email
   const issueItems = [];
   const collectIssues = (arr, master, areaName) => {
     (arr || []).forEach((it, idx) => {
@@ -962,6 +1047,8 @@ function buildMODReportEmailHtml(reportId, payload, pdfUrl, customMessage) {
   const customNoteBlock = customMessage
     ? `<div style="background:#f8fafc;border-left:4px solid #17431f;padding:12px 14px;border-radius:6px;margin-bottom:18px;font-size:13px;color:#334155;line-height:1.5;">${escapeXmlEmail(customMessage).replace(/\n/g, '<br>')}</div>`
     : '';
+
+  const pln197Display = com.PLN_197 || com.PLN_192 || '-';
 
   return `
   <div style="background-color:#f1f5f9;padding:24px 12px;font-family:'Segoe UI',Arial,sans-serif;color:#1e293b;">
@@ -1083,7 +1170,7 @@ function buildMODReportEmailHtml(reportId, payload, pdfUrl, customMessage) {
           <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;font-size:12px;">
             <tr><td style="padding:3px 0;"><strong>Guest Comments:</strong> ${escapeXmlEmail(com.GuestCom)}</td></tr>
             <tr><td style="padding:3px 0;"><strong>General Observation:</strong> ${escapeXmlEmail(com.GenObs)}</td></tr>
-            <tr><td style="padding:3px 0;"><strong>Utilities (GWT / PLN 53 / PLN 192):</strong> ${escapeXmlEmail(com.GWT_Level)} | ${escapeXmlEmail(com.PLN_53)} | ${escapeXmlEmail(com.PLN_192)}</td></tr>
+            <tr><td style="padding:3px 0;"><strong>Utilities (GWT / PLN 53 KVA / PLN 197 KVA):</strong> ${escapeXmlEmail(com.GWT_Level)} | ${escapeXmlEmail(com.PLN_53)} | ${escapeXmlEmail(pln197Display)}</td></tr>
           </table>
 
           <!-- 6. TOMBOL LINK PDF LENGKAP -->
@@ -1130,6 +1217,8 @@ function sendReportEmail(reportId, recipientEmail, ccEmail, customMessage) {
       }
     }
   }
+
+  validateMODReportCompleteness(payload);
 
   if (!pdfUrl) {
     throw new Error('Silakan klik "Export All Data PDF" terlebih dahulu sebelum mengirim email.');
