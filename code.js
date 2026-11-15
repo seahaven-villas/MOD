@@ -34,6 +34,7 @@ var BOH_MASTER_ROWS = [
   ["OFFICE", "Roof top floor next to GM’s office"], ["OFFICE", "Garden next to Executive Office"],
   ["OFFICE", "Roof (Any Leaking)?"], ["LOBBY AREA", "Drop Off"], ["LOBBY AREA", "Receiving Area"],
   ["LOBBY AREA", "Reception Counter"], ["LOBBY AREA", "Fresh Flower"], ["LOBBY AREA", "Lobby Toilet"],
+  ["OFFICE", "SMM Office"], // MENAMBAHKAN "Office" - "SMM Office" DI SINI
   ["OFFICE & LOBBY AREA", "All Lamp/Lighting"]
 ];
 
@@ -357,78 +358,94 @@ function saveMODDraft(payload) {
 }
 
 /**
- * Sinkronisasi Item Berstatus "Issue" ke Sheet MOD_Issues
+ * Sinkronisasi Item Berstatus "Issue" ke Sheet MOD_Issues (DIPERBARUI - MENCEGAH DUPLIKAT)
  */
 function syncIssuesFromPayload(payload, timestamp) {
   const issueSheet = getOrCreateIssueSheet();
   const lastRow = issueSheet.getLastRow();
-  const existingStatusMap = {};
-  const keepRows = [];
+  
+  // Ambil data lama untuk mencari issue open yang sama
+  const oldData = lastRow > 1 ? issueSheet.getRange(2, 1, lastRow - 1, 10).getValues() : [];
+  
+  let newIssuesAdded = 0;
 
-  if (lastRow > 1) {
-    const oldData = issueSheet.getRange(2, 1, lastRow - 1, 10).getValues();
-    oldData.forEach(r => {
-      if (String(r[1]) === String(payload.reportId)) {
-        existingStatusMap[String(r[0])] = r[8];
-      } else {
-        keepRows.push(r);
-      }
-    });
-  }
-
-  const newIssues = [];
-  const pushIfIssue = (areaCategory, subAreaUnit, itemName, itemObj, codeSuffix) => {
+  const pushOrUpdateIssue = (areaCategory, subAreaUnit, itemName, itemObj, codeSuffix) => {
     if (itemObj && String(itemObj.status).trim() === 'Issue') {
-      const issueId = `${payload.reportId}-${codeSuffix}`;
-      const prevStatus = existingStatusMap[issueId] || 'Open';
-      newIssues.push([
-        issueId,
-        payload.reportId,
-        payload.header.DayDate || '',
-        payload.header.ModName || '',
-        areaCategory,
-        subAreaUnit,
-        itemName,
-        itemObj.notes || '-',
-        prevStatus,
-        timestamp
-      ]);
+      const issueId = `${payload.reportId}-${codeSuffix}`; // Jika ingin ID unik per Laporan, biarkan begini.
+                                                           // Namun, kalau mau gabungkan semua "Open" issue untuk item yg sama lintas laporan:
+      
+      // LOGIKA BARU MENCARI ISSUE OPEN YANG SAMA (Bedasarkan Area & Item)
+      let foundExistingOpenRowIndex = -1;
+      for(let i=0; i<oldData.length; i++) {
+          let row = oldData[i];
+          // Cek kesamaan Area, SubArea, Item dan Status = "Open"
+          if(row[4] === areaCategory && row[5] === subAreaUnit && row[6] === itemName && row[8] === 'Open') {
+              foundExistingOpenRowIndex = i;
+              break;
+          }
+      }
+
+      if(foundExistingOpenRowIndex !== -1) {
+          // UPDATE DATA LAMA (Tambahkan/Timpa Notes)
+          let rowIndexInSheet = foundExistingOpenRowIndex + 2;
+          let oldNotes = oldData[foundExistingOpenRowIndex][7];
+          let newNotes = itemObj.notes || '-';
+          
+          // Opsional: Gabungkan notes lama & baru, atau timpa dengan notes baru + nama mod terbaru
+          let combinedNotes = `[${payload.header.ModName}] ${newNotes}`;
+          if(oldNotes && oldNotes !== '-') {
+             // Jika ingin menyimpan history notes:
+             // combinedNotes = oldNotes + " \n| " + combinedNotes;
+             // Jika cukup update note terakhir saja:
+              combinedNotes = combinedNotes;
+          }
+
+          issueSheet.getRange(rowIndexInSheet, 8).setValue(combinedNotes); // Update Notes
+          issueSheet.getRange(rowIndexInSheet, 10).setValue(timestamp); // Update Timestamp
+          // (Anda juga bisa mengupdate nama MOD pelapor terakhir di kolom 4 jika diinginkan)
+      } else {
+         // BUAT BARIS BARU (karena tidak ada yang open untuk item ini)
+         newIssuesAdded++;
+         issueSheet.appendRow([
+            issueId,
+            payload.reportId,
+            payload.header.DayDate || '',
+            payload.header.ModName || '',
+            areaCategory,
+            subAreaUnit,
+            itemName,
+            itemObj.notes || '-',
+            'Open', // Default saat baru dimasukkan
+            timestamp
+         ]);
+      }
     }
   };
 
   (payload.pa || []).forEach((it, idx) => {
     const m = PA_MASTER_ROWS[idx] || ['PUBLIC AREA', 'Item #' + (idx + 1)];
-    pushIfIssue('Public Area Issue', m[0], m[1], it, `PA-${idx + 1}`);
+    pushOrUpdateIssue('Public Area Issue', m[0], m[1], it, `PA-${idx + 1}`);
   });
 
   (payload.boh || []).forEach((it, idx) => {
     const m = BOH_MASTER_ROWS[idx] || ['BOH & LOBBY', 'Item #' + (idx + 1)];
-    pushIfIssue('BOH & Lobby Area Issue', m[0], m[1], it, `BOH-${idx + 1}`);
+    pushOrUpdateIssue('BOH & Lobby Area Issue', m[0], m[1], it, `BOH-${idx + 1}`);
   });
 
   (payload.rest || []).forEach((it, idx) => {
     const m = REST_MASTER_ROWS[idx] || ['RESTAURANT', 'Item #' + (idx + 1)];
-    pushIfIssue('Restaurant Issue', m[0], m[1], it, `REST-${idx + 1}`);
+    pushOrUpdateIssue('Restaurant Issue', m[0], m[1], it, `REST-${idx + 1}`);
   });
 
   (payload.villas || []).forEach((v, vIdx) => {
     const vName = v.name || `Villa #${vIdx + 1}`;
     (v.items || []).forEach((it, idx) => {
       const m = VILLA_MASTER_ROWS[idx] || ['Villa', 'Item #' + (idx + 1)];
-      pushIfIssue('Villa Issue', `${vName} (${m[0]})`, m[1], it, `V${vIdx + 1}-${idx + 1}`);
+      pushOrUpdateIssue('Villa Issue', `${vName} (${m[0]})`, m[1], it, `V${vIdx + 1}-${idx + 1}`);
     });
   });
 
-  const combinedRows = keepRows.concat(newIssues);
-
-  if (lastRow > 1) {
-    issueSheet.getRange(2, 1, lastRow - 1, 10).clearContent();
-  }
-  if (combinedRows.length > 0) {
-    issueSheet.getRange(2, 1, combinedRows.length, 10).setValues(combinedRows);
-  }
-
-  return newIssues.length;
+  return newIssuesAdded;
 }
 
 /**
@@ -501,6 +518,308 @@ function generateIssuePDFReport(selectedIssues, areaFilterLabel) {
   if (!selectedIssues || selectedIssues.length === 0) {
     throw new Error('Pilih minimal 1 item issue untuk di-export ke PDF.');
   }
+
+  const templateFile = DriveApp.getFileById(TEMPLATE_DOC_ID);
+  const parentFolder = templateFile.getParents().hasNext() ? templateFile.getParents().next() : DriveApp.getRootFolder();
+  const dateStr = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd-MMM-yyyy_HHmm');
+  const titleLabel = areaFilterLabel || 'All Areas';
+  const fileName = `MOD_Issue_Report_${titleLabel.replace(/[^a-zA-Z0-9]/g, '_')}_${dateStr}`;
+
+  const doc = DocumentApp.create(fileName);
+  const docFile = DriveApp.getFileById(doc.getId());
+  parentFolder.addFile(docFile);
+  DriveApp.getRootFolder().removeFile(docFile);
+
+  const body = doc.getBody();
+  body.setMarginTop(36).setMarginBottom(36).setMarginLeft(36).setMarginRight(36);
+
+  const headerTitle = body.appendParagraph('SEAHAVEN VILLAS BY KAMUELA');
+  headerTitle.setHeading(DocumentApp.ParagraphHeading.HEADING1);
+  headerTitle.editAsText().setForegroundColor('#17431f').setBold(true).setFontSize(16);
+
+  const subTitle = body.appendParagraph(`MOD ISSUE & DEFECT FOLLOW-UP REPORT (${titleLabel.toUpperCase()})`);
+  subTitle.editAsText().setForegroundColor('#991b1b').setBold(true).setFontSize(11);
+
+  const metaPara = body.appendParagraph(
+    `Generated Date: ${Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd MMM yyyy HH:mm')}   |   Total Issues: ${selectedIssues.length} Item(s)\n`
+  );
+  metaPara.editAsText().setForegroundColor('#475569').setFontSize(9);
+
+  const tableRows = [
+    ['NO', 'DATE / MOD', 'AREA CATEGORY', 'LOCATION / UNIT', 'ITEM CHECKLIST', 'ISSUE NOTES', 'STATUS']
+  ];
+
+  selectedIssues.forEach((it, idx) => {
+    tableRows.push([
+      String(idx + 1),
+      `${it.dayDate}\n(${it.modName})`,
+      it.areaCategory.replace(' Issue', ''),
+      it.subAreaUnit,
+      it.itemChecklist,
+      it.notes || '-',
+      it.issueStatus || 'Open'
+    ]);
+  });
+
+  const table = body.appendTable(tableRows);
+  table.setBorderColor('#cbd5e1');
+  table.setBorderWidth(0.5);
+
+  const colWidths = [25, 80, 75, 85, 95, 115, 45];
+  for (let r = 0; r < table.getNumRows(); r++) {
+    const row = table.getRow(r);
+    for (let c = 0; c < row.getNumCells(); c++) {
+      const cell = row.getCell(c);
+      cell.setWidth(colWidths[c]);
+      cell.setPaddingTop(4).setPaddingBottom(4).setPaddingLeft(4).setPaddingRight(4);
+      const txt = cell.editAsText();
+      txt.setFontFamily('Arial').setFontSize(8.5);
+      if (r === 0) {
+        cell.setBackgroundColor('#17431f');
+        txt.setBold(true).setForegroundColor('#ffffff');
+      } else {
+        if (r % 2 === 0) cell.setBackgroundColor('#f8fafc');
+        txt.setBold(c === 6).setForegroundColor(c === 6 ? '#991b1b' : '#1e293b');
+      }
+    }
+  }
+
+  const footerPara = body.appendParagraph('\nNote: Mohon kepada HOD terkait (Engineering / Housekeeping / Operational) untuk segera menindaklanjuti daftar issue di atas.');
+  footerPara.editAsText().setItalic(true).setFontSize(8.5).setForegroundColor('#64748b');
+
+  doc.saveAndClose();
+
+  const pdfBlob = docFile.getAs(MimeType.PDF);
+  const pdfFile = parentFolder.createFile(pdfBlob).setName(fileName + '.pdf');
+  applyInternalDriveSharing(pdfFile);
+  docFile.setTrashed(true);
+
+  return {
+    status: 'Success',
+    pdfUrl: pdfFile.getUrl(),
+    fileId: pdfFile.getId(),
+    pdfBase64: Utilities.base64Encode(pdfBlob.getBytes())
+  };
+}
+
+/**
+ * Helper: Build HTML Email Template untuk Rekap Issue HOD
+ */
+function buildIssueEmailHtml(pdfUrl, subjectTitle, customMessage, issueRows) {
+  const generatedTime = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'EEEE, dd MMM yyyy • HH:mm');
+  const noteHtml = customMessage
+    ? `<div style="background:#f8fafc;border-left:4px solid #17431f;padding:12px 14px;border-radius:6px;margin-bottom:18px;font-size:13px;color:#334155;line-height:1.5;">${escapeXmlEmail(customMessage).replace(/\n/g, '<br>')}</div>`
+    : '';
+
+  let rowsHtml = '';
+  (issueRows || []).slice(0, 15).forEach((it, idx) => {
+    const bg = idx % 2 === 1 ? '#f8fafc' : '#ffffff';
+    rowsHtml += `
+      <tr style="background:${bg};">
+        <td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;font-size:12px;color:#475569;text-align:center;">${idx + 1}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;font-size:12px;color:#1e293b;font-weight:bold;">${escapeXmlEmail(it.subAreaUnit)}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;font-size:12px;color:#334155;">${escapeXmlEmail(it.itemChecklist)}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #e2e8f0;font-size:12px;color:#b91c1c;font-weight:600;">${escapeXmlEmail(it.notes)}</td>
+      </tr>
+    `;
+  });
+
+  const tableSection = (issueRows && issueRows.length > 0) ? `
+    <h3 style="margin:18px 0 8px 0;font-size:13px;color:#991b1b;text-transform:uppercase;letter-spacing:0.5px;">Ringkasan Temuan Issue (${issueRows.length} Item)</h3>
+    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
+      <thead>
+        <tr style="background:#17431f;color:#ffffff;font-size:11px;text-transform:uppercase;">
+          <th style="padding:8px 10px;text-align:center;width:32px;">No</th>
+          <th style="padding:8px 10px;text-align:left;">Lokasi / Unit</th>
+          <th style="padding:8px 10px;text-align:left;">Item Checklist</th>
+          <th style="padding:8px 10px;text-align:left;">Catatan Issue</th>
+        </tr>
+      </thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>
+  ` : '';
+
+  return `
+  <div style="background-color:#f1f5f9;padding:24px 12px;font-family:'Segoe UI',Arial,sans-serif;color:#1e293b;">
+    <table width="100%" max-width="640" align="center" cellpadding="0" cellspacing="0" style="max-width:640px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #cbd5e1;box-shadow:0 4px 12px rgba(0,0,0,0.06);">
+      <!-- HEADER LOGO -->
+      <tr>
+        <td style="background:#f5faf8;padding:22px 24px;text-align:center;border-bottom:3px solid #17431f;">
+          <img src="${SEAHAVEN_LOGO_URL}" alt="Seahaven Villas by Kamuela" style="height:56px;width:auto;margin-bottom:8px;">
+          <div style="font-size:11px;font-weight:800;color:#17431f;letter-spacing:1.5px;text-transform:uppercase;">MOD ISSUE &amp; DEFECT FOLLOW-UP REPORT</div>
+        </td>
+      </tr>
+      <!-- INFO META -->
+      <tr>
+        <td style="padding:22px 24px;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 16px;margin-bottom:16px;">
+            <tr>
+              <td style="font-size:12px;color:#7f1d1d;padding-bottom:4px;"><strong>Perihal:</strong> ${escapeXmlEmail(subjectTitle)}</td>
+            </tr>
+            <tr>
+              <td style="font-size:12px;color:#991b1b;"><strong>Waktu Kirim:</strong> ${escapeXmlEmail(generatedTime)} WITA</td>
+            </tr>
+          </table>
+
+          ${noteHtml}
+          ${tableSection}
+
+          <!-- TOMBOL PDF -->
+          <div style="text-align:center;margin:26px 0 10px 0;">
+            <a href="${pdfUrl}" target="_blank" style="display:inline-block;background-color:#17431f;color:#ffffff;text-decoration:none;font-weight:bold;font-size:13px;padding:12px 26px;border-radius:10px;">
+              &#128196; Buka Dokumen Lengkap Issue (PDF)
+            </a>
+            <p style="font-size:11px;color:#64748b;margin-top:8px;">File PDF resmi juga telah dilampirkan langsung pada email ini.</p>
+          </div>
+        </td>
+      </tr>
+      <!-- FOOTER -->
+      <tr>
+        <td style="background:#0b2210;color:#a7f3d0;text-align:center;padding:14px 20px;font-size:11px;">
+          Seahaven Villas by Kamuela • Bali &mdash; Internal Operational System
+        </td>
+      </tr>
+    </table>
+  </div>`;
+}
+
+/**
+ * Kirim PDF Rekap Issue via Email ke HOD dengan HTML Template
+ */
+function sendIssueReportEmail(pdfFileId, recipientEmail, ccEmail, subjectTitle, customMessage) {
+  if (!pdfFileId) throw new Error('File PDF Issue belum tersedia.');
+  const pdfFile = DriveApp.getFileById(pdfFileId);
+  const pdfUrl = pdfFile.getUrl();
+
+  const openIssues = getHistoryIssues().filter(i => i.issueStatus === 'Open');
+  const htmlBody = buildIssueEmailHtml(
+    pdfUrl,
+    subjectTitle || 'MOD Issue Follow-Up Report - Seahaven',
+    customMessage || 'Dear HOD Team,\n\nTerlampir adalah daftar temuan MOD Issue Checklist yang memerlukan tindak lanjut dari departemen terkait.',
+    openIssues
+  );
+
+  const mailOptions = {
+    attachments: [pdfFile.getAs(MimeType.PDF)],
+    name: 'Seahaven Villas - MOD Issue Tracker',
+    htmlBody: htmlBody
+  };
+  if (ccEmail) mailOptions.cc = ccEmail;
+
+  const plainBody = customMessage || `Dear HOD Team,\n\nTerlampir adalah daftar temuan MOD Issue Checklist.\nLink PDF: ${pdfUrl}\n\nTerima kasih,\nMOD Seahaven Villas`;
+  GmailApp.sendEmail(recipientEmail, subjectTitle || 'MOD Issue Follow-Up Report - Seahaven', plainBody, mailOptions);
+
+  return { status: 'Success' };
+}
+
+/**
+ * Validasi Kelengkapan Laporan Sebelum Export PDF & Kirim Email
+ */
+function validateMODReportCompleteness(payload) {
+  if (!payload) {
+    throw new Error('Data laporan tidak ditemukan.');
+  }
+
+  const missing = [];
+  const h = payload.header || {};
+  const fc = payload.forecast || {};
+  const com = payload.comments || {};
+
+  // 1. Cek Header
+  if (!String(h.DayDate || '').trim() || !String(h.Time || '').trim() || !String(h.ModName || '').trim()) {
+    missing.push('• Bagian 1 (Header): Day/Date, Shift Time, dan MOD Name wajib diisi.');
+  }
+
+  // 2. Cek General Forecast
+  const forecastKeys = [
+    ['LastOcc', 'Last Night Occupancy'], ['LastRoom', 'Last Night Room Sold'], ['LastARR', 'Last Night ARR'],
+    ['TodOcc', "Today's Occupancy"], ['TodRoom', "Today's Room Sold"], ['TodARR', "Today's ARR"],
+    ['TomOcc', 'Tomorrow Occupancy'], ['TomRoom', 'Tomorrow Room Sold'], ['TomARR', 'Tomorrow ARR'],
+    ['FBCover', 'F&B Cover'], ['FBRev', 'F&B Revenue'], ['VIPWelcome', 'VIP Welcome']
+  ];
+  const emptyForecast = forecastKeys.filter(([k]) => !String(fc[k] || '').trim()).map(([, label]) => label);
+  if (emptyForecast.length > 0) {
+    missing.push(`• Bagian 1 (General Forecast): ${emptyForecast.join(', ')} belum diisi.`);
+  }
+
+  // 3. Cek Status Checklist & Notes untuk Issue
+  const checkSection = (items, expectedLen, label) => {
+    let unpicked = 0;
+    let issueNoNotes = 0;
+    const list = items || [];
+    for (let i = 0; i < expectedLen; i++) {
+      const it = list[i] || {};
+      const st = String(it.status || '').trim();
+      if (!st) {
+        unpicked++;
+      } else if (st === 'Issue' && !String(it.notes || '').trim()) {
+        issueNoNotes++;
+      }
+    }
+    if (unpicked > 0) missing.push(`• ${label}: masih ada ${unpicked} item checklist belum dipilih statusnya.`);
+    if (issueNoNotes > 0) missing.push(`• ${label}: ada ${issueNoNotes} item berstatus "Issue" yang belum diisi Notes.`);
+  };
+
+  checkSection(payload.pa, PA_MASTER_ROWS.length, 'Bagian 2 (Public Area)');
+  checkSection(payload.boh, BOH_MASTER_ROWS.length, 'Bagian 3 (BOH & Lobby)');
+  checkSection(payload.rest, REST_MASTER_ROWS.length, 'Bagian 4 (Restaurant)');
+
+  const villas = payload.villas || [];
+  if (villas.length === 0) {
+    missing.push('• Bagian 5 (Villa Checklist): minimal 1 unit Villa wajib diinspeksi.');
+  } else {
+    villas.forEach((v, idx) => {
+      const vName = String(v.name || '').trim();
+      if (!vName) {
+        missing.push(`• Bagian 5 (Villa #${idx + 1}): Nomor/Nama Villa belum diisi.`);
+      }
+      checkSection(v.items, VILLA_MASTER_ROWS.length, `Bagian 5 (${vName || 'Villa #' + (idx + 1)})`);
+    });
+  }
+
+  // 4. Cek Comments & Utilities (Mendukung PLN_197 maupun PLN_192)
+  const pln197Val = String(com.PLN_197 || com.PLN_192 || '').trim();
+  const commentKeys = [
+    ['GuestCom', 'Guest Comments'],
+    ['GenObs', 'General Observation'],
+    ['GWT_Level', 'GWT Level'],
+    ['PLN_53', 'PLN Meter (53 KVA)']
+  ];
+  const emptyComments = commentKeys.filter(([k]) => !String(com[k] || '').trim()).map(([, label]) => label);
+  if (!pln197Val) emptyComments.push('PLN Meter (197 KVA)');
+
+  if (emptyComments.length > 0) {
+    missing.push(`• Bagian 7 (Comments & Utilities): ${emptyComments.join(', ')} belum diisi.`);
+  }
+
+  if (missing.length > 0) {
+    throw new Error('EXPORT & EMAIL DITOLAK — Laporan belum lengkap:\n\n' + missing.join('\n'));
+  }
+}
+
+/**
+ * 6. Export All Data PDF Utama (1-8 Kategori)
+ */
+function generatePDFReport(reportId, returnBase64) {
+  const sheet = getOrCreateReportSheet();
+  let targetRow = -1;
+  let payload = null;
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow > 1) {
+    const ids = sheet.getRange(2, 1, lastRow - 1, 1).getDisplayValues();
+    for (let i = 0; i < ids.length; i++) {
+      if (ids[i][0] === reportId) {
+        targetRow = i + 2;
+        const jsonVal = sheet.getRange(targetRow, 10).getValue();
+        payload = jsonVal ? JSON.parse(jsonVal) : null;
+        break;
+      }
+    }
+  }
+
+  if (!payload) throw new Error('Data laporan tidak ditemukan.');
+  validateMODReportCompleteness(payload);
 
   const templateFile = DriveApp.getFileById(TEMPLATE_DOC_ID);
   const parentFolder = templateFile.getParents().hasNext() ? templateFile.getParents().next() : DriveApp.getRootFolder();
