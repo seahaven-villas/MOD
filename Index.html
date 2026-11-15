@@ -16,11 +16,13 @@
     .pill-Good-active { background-color: #16a34a !important; color: #ffffff !important; border-color: #15803d !important; box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3); }
     .pill-Pending-active { background-color: #d97706 !important; color: #ffffff !important; border-color: #b45309 !important; box-shadow: 0 2px 6px rgba(217, 119, 6, 0.3); }
     .pill-Issue-active { background-color: #dc2626 !important; color: #ffffff !important; border-color: #b91c1c !important; box-shadow: 0 2px 6px rgba(220, 38, 38, 0.3); }
+    .pill-NA-active { background-color: #64748b !important; color: #ffffff !important; border-color: #475569 !important; box-shadow: 0 2px 6px rgba(100, 116, 139, 0.3); }
 
     /* Card Left Border Accent */
     .row-card-Good { border-left: 4px solid #22c55e !important; background-color: #f0fdf4/40; }
     .row-card-Pending { border-left: 4px solid #f59e0b !important; background-color: #fffbeb; }
     .row-card-Issue { border-left: 4px solid #ef4444 !important; background-color: #fef2f2; }
+    .row-card-NA { border-left: 4px solid #94a3b8 !important; background-color: #f8fafc; opacity: 0.9; }
   </style>
 </head>
 <body class="bg-[#0b2210] min-h-screen font-sans text-slate-800 flex items-center justify-center relative overflow-x-hidden">
@@ -130,7 +132,7 @@
               </button>
               <button type="button" onclick="openCatTab(3)" id="sideTab3" class="side-cat-btn w-full flex items-center justify-between px-3 py-2 rounded-lg text-[11px] font-medium text-emerald-100/75 hover:bg-[#17431f]/50 hover:text-white transition">
                 <span>3. BOH & Lobby</span>
-                <span id="sideProg_boh" class="text-[10px] bg-black/30 px-1.5 py-0.5 rounded font-bold">0/33</span>
+                <span id="sideProg_boh" class="text-[10px] bg-black/30 px-1.5 py-0.5 rounded font-bold">0/34</span>
               </button>
               <button type="button" onclick="openCatTab(4)" id="sideTab4" class="side-cat-btn w-full flex items-center justify-between px-3 py-2 rounded-lg text-[11px] font-medium text-emerald-100/75 hover:bg-[#17431f]/50 hover:text-white transition">
                 <span>4. Restaurant</span>
@@ -223,7 +225,7 @@
             </span>
           </div>
           <div class="flex items-center gap-2">
-            <span id="overallProgressBadge" class="text-[11px] font-extrabold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">Total: 0/234</span>
+            <span id="overallProgressBadge" class="text-[11px] font-extrabold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">Total: 0/235</span>
             <button type="button" onclick="createNewReport()" class="text-xs font-bold text-slate-600 hover:text-[#17431f] bg-slate-100 hover:bg-emerald-50 px-3 py-1.5 rounded-lg border border-slate-200 transition">
               <i class="fa-solid fa-file-circle-plus mr-1"></i> Laporan Baru
             </button>
@@ -319,7 +321,7 @@
           <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-3 mb-4">
             <div>
               <h3 class="text-xs md:text-sm font-bold text-[#17431f] uppercase tracking-wider">3. BOH & Lobby Area</h3>
-              <span id="headProg_boh" class="text-[11px] font-bold text-slate-500">0/33 Selesai • 0 Issue</span>
+              <span id="headProg_boh" class="text-[11px] font-bold text-slate-500">0/34 Selesai • 0 Issue</span>
             </div>
             <div class="flex flex-wrap items-center gap-2">
               <button type="button" id="filterUnchecked_boh" onclick="toggleUncheckedFilter('boh')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-bold px-3 py-1.5 rounded-lg transition">
@@ -1064,7 +1066,7 @@ function buildChecklistRowCard(prefix, idx, subArea, itemName, statusVal = '', n
   const i = idx + 1;
   const safeNotes = escapeHtml(notesVal);
   const cardBorder = statusVal ? `row-card-${statusVal}` : 'border-l-4 border-l-slate-200 bg-white';
-  const showNotes = (statusVal === 'Pending' || statusVal === 'Issue' || notesVal.trim() !== '') ? '' : 'hidden sm:block';
+  const showNotes = (statusVal === 'Pending' || statusVal === 'Issue' || statusVal === 'NA' || notesVal.trim() !== '') ? '' : 'hidden sm:block';
 
   return `
     <div id="${prefix}_card_${i}" data-prefix="${prefix}" class="chk-card-${prefix} ${cardBorder} border border-slate-200 rounded-xl p-3 transition-colors">
@@ -1078,27 +1080,31 @@ function buildChecklistRowCard(prefix, idx, subArea, itemName, statusVal = '', n
         </div>
 
         <!-- 1-TAP PILL BUTTONS -->
-        <div class="flex items-center gap-1.5 flex-shrink-0">
+        <div class="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
           <input type="hidden" id="${prefix}_S${i}" value="${escapeHtml(statusVal)}">
           <button type="button" onclick="selectItemStatus('${prefix}', ${i}, 'Good')" id="${prefix}_btnGood_${i}"
-            class="pill-btn ${statusVal === 'Good' ? 'pill-Good-active' : 'bg-slate-50 text-slate-600 hover:bg-emerald-50 border-slate-200'} flex-1 sm:flex-none px-3 py-1.5 rounded-lg border text-[11px] font-extrabold flex items-center justify-center gap-1">
+            class="pill-btn ${statusVal === 'Good' ? 'pill-Good-active' : 'bg-slate-50 text-slate-600 hover:bg-emerald-50 border-slate-200'} flex-1 sm:flex-none px-2.5 sm:px-3 py-1.5 rounded-lg border text-[11px] font-extrabold flex items-center justify-center gap-1">
             <i class="fa-solid fa-check"></i> Good
           </button>
           <button type="button" onclick="selectItemStatus('${prefix}', ${i}, 'Pending')" id="${prefix}_btnPending_${i}"
-            class="pill-btn ${statusVal === 'Pending' ? 'pill-Pending-active' : 'bg-slate-50 text-slate-600 hover:bg-amber-50 border-slate-200'} flex-1 sm:flex-none px-3 py-1.5 rounded-lg border text-[11px] font-extrabold flex items-center justify-center gap-1">
+            class="pill-btn ${statusVal === 'Pending' ? 'pill-Pending-active' : 'bg-slate-50 text-slate-600 hover:bg-amber-50 border-slate-200'} flex-1 sm:flex-none px-2.5 sm:px-3 py-1.5 rounded-lg border text-[11px] font-extrabold flex items-center justify-center gap-1">
             <i class="fa-solid fa-clock"></i> Pending
           </button>
           <button type="button" onclick="selectItemStatus('${prefix}', ${i}, 'Issue')" id="${prefix}_btnIssue_${i}"
-            class="pill-btn ${statusVal === 'Issue' ? 'pill-Issue-active' : 'bg-slate-50 text-slate-600 hover:bg-red-50 border-slate-200'} flex-1 sm:flex-none px-3 py-1.5 rounded-lg border text-[11px] font-extrabold flex items-center justify-center gap-1">
+            class="pill-btn ${statusVal === 'Issue' ? 'pill-Issue-active' : 'bg-slate-50 text-slate-600 hover:bg-red-50 border-slate-200'} flex-1 sm:flex-none px-2.5 sm:px-3 py-1.5 rounded-lg border text-[11px] font-extrabold flex items-center justify-center gap-1">
             <i class="fa-solid fa-triangle-exclamation"></i> Issue
+          </button>
+          <button type="button" onclick="selectItemStatus('${prefix}', ${i}, 'NA')" id="${prefix}_btnNA_${i}"
+            class="pill-btn ${statusVal === 'NA' ? 'pill-NA-active' : 'bg-slate-50 text-slate-600 hover:bg-slate-200 border-slate-200'} flex-1 sm:flex-none px-2.5 sm:px-3 py-1.5 rounded-lg border text-[11px] font-extrabold flex items-center justify-center gap-1" title="Not Available">
+            <i class="fa-solid fa-ban"></i> N/A
           </button>
         </div>
       </div>
 
-      <!-- NOTES INPUT (Otomatis muncul di Mobile saat Pending/Issue dipilih) -->
+      <!-- NOTES INPUT -->
       <div id="${prefix}_noteWrap_${i}" class="${showNotes} mt-2 pt-2 border-t border-slate-200/60">
         <input type="text" id="${prefix}_N${i}" value="${safeNotes}" oninput="triggerAutoSave()"
-          placeholder="${statusVal === 'Issue' ? 'Wajib isi detail kerusakan / temuan issue...' : 'Catatan tambahan (opsional)...'}"
+          placeholder="${statusVal === 'Issue' ? 'Wajib isi detail kerusakan / temuan issue...' : (statusVal === 'NA' ? 'Keterangan item tidak tersedia (opsional)...' : 'Catatan tambahan (opsional)...')}"
           class="w-full bg-white/90 border ${statusVal === 'Issue' ? 'border-red-300 focus:border-red-500' : 'border-slate-200 focus:border-[#17431f]'} rounded-lg px-3 py-1.5 text-xs outline-none">
       </div>
     </div>
@@ -1136,7 +1142,7 @@ function applyStatusVisual(prefix, i, statusVal) {
 
   const card = document.getElementById(`${prefix}_card_${i}`);
   if (card) {
-    card.classList.remove('row-card-Good', 'row-card-Pending', 'row-card-Issue', 'border-l-slate-200', 'bg-white');
+    card.classList.remove('row-card-Good', 'row-card-Pending', 'row-card-Issue', 'row-card-NA', 'border-l-slate-200', 'bg-white');
     if (statusVal) {
       card.classList.add(`row-card-${statusVal}`);
     } else {
@@ -1144,10 +1150,10 @@ function applyStatusVisual(prefix, i, statusVal) {
     }
   }
 
-  ['Good', 'Pending', 'Issue'].forEach(st => {
+  ['Good', 'Pending', 'Issue', 'NA'].forEach(st => {
     const btn = document.getElementById(`${prefix}_btn${st}_${i}`);
     if (!btn) return;
-    btn.classList.remove('pill-Good-active', 'pill-Pending-active', 'pill-Issue-active', 'bg-slate-50', 'text-slate-600', 'border-slate-200');
+    btn.classList.remove('pill-Good-active', 'pill-Pending-active', 'pill-Issue-active', 'pill-NA-active', 'bg-slate-50', 'text-slate-600', 'border-slate-200');
     if (statusVal === st) {
       btn.classList.add(`pill-${st}-active`);
     } else {
@@ -1158,7 +1164,7 @@ function applyStatusVisual(prefix, i, statusVal) {
   const noteWrap = document.getElementById(`${prefix}_noteWrap_${i}`);
   const noteInp = document.getElementById(`${prefix}_N${i}`);
   if (noteWrap && noteInp) {
-    if (statusVal === 'Pending' || statusVal === 'Issue' || noteInp.value.trim() !== '') {
+    if (statusVal === 'Pending' || statusVal === 'Issue' || statusVal === 'NA' || noteInp.value.trim() !== '') {
       noteWrap.classList.remove('hidden');
     } else {
       noteWrap.classList.add('hidden', 'sm:block');
@@ -1166,6 +1172,9 @@ function applyStatusVisual(prefix, i, statusVal) {
     if (statusVal === 'Issue') {
       noteInp.placeholder = 'Wajib isi detail kerusakan / temuan issue...';
       noteInp.classList.add('border-red-300');
+    } else if (statusVal === 'NA') {
+      noteInp.placeholder = 'Keterangan item tidak tersedia (opsional)...';
+      noteInp.classList.remove('border-red-300');
     } else {
       noteInp.placeholder = 'Catatan tambahan (opsional)...';
       noteInp.classList.remove('border-red-300');
