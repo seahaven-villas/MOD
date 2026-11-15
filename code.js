@@ -358,67 +358,81 @@ function saveMODDraft(payload) {
 }
 
 /**
- * Sinkronisasi Item Berstatus "Issue" ke Sheet MOD_Issues (DIPERBARUI - MENCEGAH DUPLIKAT)
+ * Sinkronisasi Item Berstatus "Issue" ke Sheet MOD_Issues (ANTI-DUPLIKAT LINTAS HOD & RIWAYAT CATATAN)
  */
 function syncIssuesFromPayload(payload, timestamp) {
   const issueSheet = getOrCreateIssueSheet();
   const lastRow = issueSheet.getLastRow();
-  
-  // Ambil data lama untuk mencari issue open yang sama
+
+  // Ambil data lama untuk mencari issue Open yang sama
   const oldData = lastRow > 1 ? issueSheet.getRange(2, 1, lastRow - 1, 10).getValues() : [];
-  
   let newIssuesAdded = 0;
 
+  // Helper normalisasi teks agar kebal perbedaan spasi & huruf besar/kecil
+  const normalize = (val) => String(val || '').trim().toLowerCase().replace(/\s+/g, ' ');
+
   const pushOrUpdateIssue = (areaCategory, subAreaUnit, itemName, itemObj, codeSuffix) => {
-    if (itemObj && String(itemObj.status).trim() === 'Issue') {
-      const issueId = `${payload.reportId}-${codeSuffix}`; // Jika ingin ID unik per Laporan, biarkan begini.
-                                                           // Namun, kalau mau gabungkan semua "Open" issue untuk item yg sama lintas laporan:
-      
-      // LOGIKA BARU MENCARI ISSUE OPEN YANG SAMA (Bedasarkan Area & Item)
-      let foundExistingOpenRowIndex = -1;
-      for(let i=0; i<oldData.length; i++) {
-          let row = oldData[i];
-          // Cek kesamaan Area, SubArea, Item dan Status = "Open"
-          if(row[4] === areaCategory && row[5] === subAreaUnit && row[6] === itemName && row[8] === 'Open') {
-              foundExistingOpenRowIndex = i;
-              break;
-          }
+    if (!itemObj || normalize(itemObj.status) !== 'issue') return;
+
+    const normArea = normalize(areaCategory);
+    const normSub = normalize(subAreaUnit);
+    const normItem = normalize(itemName);
+    const modName = String(payload.header.ModName || 'MOD').trim();
+    const rawNotes = String(itemObj.notes || '-').trim();
+    const formattedEntry = `[${timestamp} - ${modName}] ${rawNotes}`;
+
+    // Cari issue berstatus "Open" pada area, sub-area, dan item yang sama (lintas HOD)
+    let foundIndex = -1;
+    for (let i = 0; i < oldData.length; i++) {
+      const row = oldData[i];
+      if (
+        normalize(row[4]) === normArea &&
+        normalize(row[5]) === normSub &&
+        normalize(row[6]) === normItem &&
+        normalize(row[8]) === 'open'
+      ) {
+        foundIndex = i;
+        break;
+      }
+    }
+
+    if (foundIndex !== -1) {
+      // UPDATE BARIS OPEN YANG SUDAH ADA (Mencegah Duplikat)
+      const rowIndexInSheet = foundIndex + 2;
+      const oldNotes = String(oldData[foundIndex][7] || '').trim();
+
+      // Hindari menggandakan catatan yang sama persis jika MOD hanya klik "Save Draft" berulang kali
+      let updatedNotes = oldNotes;
+      if (!oldNotes || oldNotes === '-') {
+        updatedNotes = formattedEntry;
+      } else if (!oldNotes.includes(formattedEntry)) {
+        updatedNotes = `${oldNotes}\n| ${formattedEntry}`;
       }
 
-      if(foundExistingOpenRowIndex !== -1) {
-          // UPDATE DATA LAMA (Tambahkan/Timpa Notes)
-          let rowIndexInSheet = foundExistingOpenRowIndex + 2;
-          let oldNotes = oldData[foundExistingOpenRowIndex][7];
-          let newNotes = itemObj.notes || '-';
-          
-          // Opsional: Gabungkan notes lama & baru, atau timpa dengan notes baru + nama mod terbaru
-          let combinedNotes = `[${payload.header.ModName}] ${newNotes}`;
-          if(oldNotes && oldNotes !== '-') {
-             // Jika ingin menyimpan history notes:
-             // combinedNotes = oldNotes + " \n| " + combinedNotes;
-             // Jika cukup update note terakhir saja:
-              combinedNotes = combinedNotes;
-          }
+      issueSheet.getRange(rowIndexInSheet, 8).setValue(updatedNotes); // Update gabungan Notes
+      issueSheet.getRange(rowIndexInSheet, 10).setValue(timestamp);   // Update Last Updated Timestamp
 
-          issueSheet.getRange(rowIndexInSheet, 8).setValue(combinedNotes); // Update Notes
-          issueSheet.getRange(rowIndexInSheet, 10).setValue(timestamp); // Update Timestamp
-          // (Anda juga bisa mengupdate nama MOD pelapor terakhir di kolom 4 jika diinginkan)
-      } else {
-         // BUAT BARIS BARU (karena tidak ada yang open untuk item ini)
-         newIssuesAdded++;
-         issueSheet.appendRow([
-            issueId,
-            payload.reportId,
-            payload.header.DayDate || '',
-            payload.header.ModName || '',
-            areaCategory,
-            subAreaUnit,
-            itemName,
-            itemObj.notes || '-',
-            'Open', // Default saat baru dimasukkan
-            timestamp
-         ]);
-      }
+      // Sinkronkan juga di memori oldData
+      oldData[foundIndex][7] = updatedNotes;
+      oldData[foundIndex][9] = timestamp;
+    } else {
+      // BUAT BARIS BARU (Karena belum ada issue Open untuk item ini)
+      newIssuesAdded++;
+      const issueId = `${payload.reportId}-${codeSuffix}`;
+      const newRow = [
+        issueId,
+        payload.reportId,
+        payload.header.DayDate || '',
+        modName,
+        areaCategory,
+        subAreaUnit,
+        itemName,
+        formattedEntry,
+        'Open',
+        timestamp
+      ];
+      issueSheet.appendRow(newRow);
+      oldData.push(newRow); // Tambahkan ke memori agar kebal duplikat dalam 1 sesi simpan
     }
   };
 
