@@ -1622,23 +1622,12 @@ function closeIssueEmailModal() {
 }
 
 function applyHODPreset(type) {
-  if (!hodDirectory || hodDirectory.length === 0) {
-    return alert('Daftar email HOD di sheet Users_HOD belum terisi. Silakan ketik email tujuan secara manual.');
-  }
-  let matched = [];
-  if (type === 'ENG') {
-    matched = hodDirectory.filter(h => (h.position + h.name + h.email).toLowerCase().match(/eng|chief|maintenance/));
-  } else if (type === 'HK') {
-    matched = hodDirectory.filter(h => (h.position + h.name + h.email).toLowerCase().match(/house|hk|exec/));
-  } else {
-    matched = hodDirectory;
-  }
-
-  if (matched.length === 0) {
-    alert('Email untuk departemen tersebut belum ditemukan di sheet Users_HOD, menampilkan semua HOD.');
-    matched = hodDirectory;
-  }
-  document.getElementById('issueEmailTo').value = matched.map(m => m.email).join(', ');
+  const emailPresets = {
+    ENG: 'seahavence@kamuelavillas.com',
+    HK: 'seahavenehk@kamuelavillas.com',
+    ALL: 'seahaven-hods@kamuelavillas.com'
+  };
+  document.getElementById('issueEmailTo').value = emailPresets[type] || '';
 }
 
 function submitIssueEmail() {
