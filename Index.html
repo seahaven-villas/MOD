@@ -477,74 +477,6 @@
 
       <!-- ==================== VIEW C: HISTORY ISSUE & DISPATCH HOD ==================== -->
       <div id="viewIssues" class="hidden space-y-4">
-        
-        <!-- TOMBOL & PANEL ADD ISSUE + (DI LUAR MASTER CHECKLIST) -->
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-          <div class="flex flex-wrap justify-between items-center gap-2">
-            <div>
-              <h4 class="text-xs sm:text-sm font-extrabold text-slate-800">Issue di Luar Master Checklist</h4>
-              <p class="text-[11px] text-slate-500">Klik tombol di samping untuk melaporkan temuan tambahan di luar daftar master checklist.</p>
-            </div>
-            <button type="button" onclick="toggleManualIssueBox()" class="bg-[#17431f] hover:bg-[#103016] text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm transition flex items-center gap-2">
-              <i class="fa-solid fa-plus"></i> Add Issue +
-            </button>
-          </div>
-
-          <!-- FORM COLLAPSIBLE (TERBUKA SAAT KLIK ADD ISSUE +) -->
-          <form id="manualIssueForm" onsubmit="submitManualIssue(event)" class="hidden pt-3 border-t border-slate-100 space-y-3">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs items-start">
-              
-              <!-- 1. DATE (OTOMATIS) -->
-              <div>
-                <label class="block text-[10px] font-extrabold text-slate-600 uppercase tracking-wider mb-1">1. Date (Otomatis)</label>
-                <input type="text" id="manIssueDate" required class="w-full bg-slate-100 border border-slate-300 rounded-xl p-2.5 font-semibold text-slate-700 outline-none focus:bg-white focus:border-[#17431f]">
-              </div>
-
-              <!-- 2. AREA CATEGORY (ENUM) -->
-              <div>
-                <label class="block text-[10px] font-extrabold text-slate-600 uppercase tracking-wider mb-1">2. Area Category *</label>
-                <select id="manIssueArea" onchange="updateSubCategoryEnum()" required class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-bold text-[#17431f] outline-none focus:border-[#17431f]">
-                  <option value="Villa Issue">Villa Issue</option>
-                  <option value="Public Area Issue">Public Area Issue</option>
-                  <option value="BOH & Lobby Area Issue">BOH & Lobby Area Issue</option>
-                  <option value="Restaurant Issue">Restaurant Issue</option>
-                  <option value="Other / General Issue">Other / General Issue</option>
-                </select>
-              </div>
-
-              <!-- 3. SUB CATEGORY / SUB AREA (ENUM DINAMIS) -->
-              <div>
-                <label class="block text-[10px] font-extrabold text-slate-600 uppercase tracking-wider mb-1">3. Sub Area *</label>
-                <select id="manIssueSubArea" required class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-bold text-slate-700 outline-none focus:border-[#17431f]"></select>
-              </div>
-
-              <!-- 4. ITEM (LONG TEXT) -->
-              <div>
-                <label class="block text-[10px] font-extrabold text-slate-600 uppercase tracking-wider mb-1">4. Item *</label>
-                <textarea id="manIssueItem" rows="2" required placeholder="Tuliskan item / objek temuan..." class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-medium outline-none focus:bg-white focus:border-[#17431f]"></textarea>
-              </div>
-
-              <!-- 5. ISSUE NOTE (LONG TEXT) -->
-              <div>
-                <label class="block text-[10px] font-extrabold text-slate-600 uppercase tracking-wider mb-1">5. Issue Note *</label>
-                <textarea id="manIssueNotes" rows="2" required placeholder="Jelaskan detail kerusakan / temuan..." class="w-full bg-slate-50 border border-red-300 rounded-xl p-2.5 font-medium outline-none focus:bg-white focus:border-red-500"></textarea>
-              </div>
-
-            </div>
-
-            <!-- TOMBOL SAVE ISSUE DI BAWAH -->
-            <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
-              <button type="button" onclick="toggleManualIssueBox()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold px-4 py-2 rounded-xl transition">
-                Batal
-              </button>
-              <button type="submit" class="bg-[#17431f] hover:bg-[#103016] text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-md transition flex items-center gap-2">
-                <i class="fa-solid fa-floppy-disk"></i> Save Issue
-              </button>
-            </div>
-          </form>
-        </div>
-
-        <!-- HEADER & FILTER HISTORY ISSUE -->
         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
           <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-3">
             <div>
@@ -571,7 +503,6 @@
                 <option value="Public Area Issue">Public Area Issue</option>
                 <option value="BOH & Lobby Area Issue">BOH & Lobby Area Issue</option>
                 <option value="Restaurant Issue">Restaurant Issue</option>
-                <option value="Other / General Issue">Other / General Issue</option>
               </select>
 
               <select id="issueStatusFilter" onchange="renderIssuesTable()" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 outline-none">
@@ -736,28 +667,6 @@ const VILLA_ENUM = [
 ];
 const DEPT_ENUM = ["FO", "HK", "EG", "FBS", "FBK", "SEC"];
 const SHIFT_ENUM = ["Morning Shift", "Middle Shift", "Evening Shift", "Night Shift"];
-
-const SUB_AREA_ENUM_MAP = {
-  "Villa Issue": [
-    "Atlantis 101", "Atlantis 102", "Atlantis 103", "Atlantis 105", "Atlantis 106",
-    "Atlantis 201", "Atlantis 202", "Atlantis 203", "Atlantis 205", "Atlantis 206",
-    "Atlantis 301", "Atlantis 302", "Atlantis 303", "Atlantis 305", "Atlantis 306",
-    "Levithia 501", "Levithia 502", "Levithia 503", "Levithia 505", "Levithia 506",
-    "All Villas"
-  ],
-  "Public Area Issue": [
-    "TOTEM & ENTRANCE", "GENSET", "GARDEN & PATHWAY", "MAIN POOL", "ALL PUBLIC AREA"
-  ],
-  "BOH & Lobby Area Issue": [
-    "OFFICE", "LOBBY AREA", "OFFICE & LOBBY AREA", "STAFF AREA & LOCKER", "LAUNDRY & LINEN"
-  ],
-  "Restaurant Issue": [
-    "KITCHEN", "BAR", "BAR & KITCHEN", "DINING AREA"
-  ],
-  "Other / General Issue": [
-    "SPA / WELLNESS", "PARKING AREA", "SECURITY POST", "PERIMETER / FENCE", "GENERAL / OTHER"
-  ]
-};
 
 let PA_ITEMS = [
   ["TOTEM & ENTRANCE", "Villa Entrance – Main Road"], ["TOTEM & ENTRANCE", "Villa Totem Main Entrance"],
@@ -1560,61 +1469,7 @@ function handleSaveData() {
     .saveMODDraft(payload);
 }
 
-// ==================== ADD ISSUE MANUAL & HISTORY ISSUE DISPATCH KE HOD ====================
-function toggleManualIssueBox() {
-  const form = document.getElementById('manualIssueForm');
-  const isHidden = form.classList.contains('hidden');
-  if (isHidden) {
-    const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' });
-    document.getElementById('manIssueDate').value = today;
-    updateSubCategoryEnum();
-    form.classList.remove('hidden');
-  } else {
-    form.classList.add('hidden');
-  }
-}
-
-function updateSubCategoryEnum() {
-  const area = document.getElementById('manIssueArea').value;
-  const subSelect = document.getElementById('manIssueSubArea');
-  const list = SUB_AREA_ENUM_MAP[area] || ["GENERAL"];
-  subSelect.innerHTML = list.map(item => `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`).join('');
-}
-
-function submitManualIssue(e) {
-  e.preventDefault();
-  const payload = {
-    dayDate: document.getElementById('manIssueDate').value.trim(),
-    modName: currentUser ? currentUser.fullName : (document.getElementById('ModName')?.value || 'MOD'),
-    areaCategory: document.getElementById('manIssueArea').value,
-    subAreaUnit: document.getElementById('manIssueSubArea').value,
-    itemChecklist: document.getElementById('manIssueItem').value.trim(),
-    notes: document.getElementById('manIssueNotes').value.trim()
-  };
-
-  if (!payload.itemChecklist || !payload.notes) {
-    return alert('Item dan Issue Note wajib diisi.');
-  }
-
-  showLoader('Menyimpan Issue ke History Issue...');
-  google.script.run
-    .withSuccessHandler(res => {
-      hideLoader();
-      document.getElementById('manIssueItem').value = '';
-      document.getElementById('manIssueNotes').value = '';
-      document.getElementById('manualIssueForm').classList.add('hidden');
-      loadHistoryIssues();
-      alert(res.status === 'Merged'
-        ? 'Catatan ditambahkan ke issue yang sama yang masih berstatus Open!'
-        : 'Issue baru berhasil disimpan ke History Issue!');
-    })
-    .withFailureHandler(err => {
-      hideLoader();
-      alert('Gagal menyimpan issue: ' + err.message);
-    })
-    .addManualMODIssue(payload);
-}
-
+// ==================== HISTORY ISSUE & DISPATCH KE HOD ====================
 function loadHistoryIssues() {
   showLoader('Memuat Daftar History Issue...');
   google.script.run
@@ -1663,8 +1518,7 @@ function renderIssuesTable() {
     const isResolved = it.issueStatus === 'Resolved';
     const areaBadgeColor = it.areaCategory.includes('Villa') ? 'bg-purple-100 text-purple-800' :
                            it.areaCategory.includes('Restaurant') ? 'bg-orange-100 text-orange-800' :
-                           it.areaCategory.includes('Public') ? 'bg-teal-100 text-teal-800' :
-                           it.areaCategory.includes('Other') ? 'bg-slate-200 text-slate-800' : 'bg-blue-100 text-blue-800';
+                           it.areaCategory.includes('Public') ? 'bg-teal-100 text-teal-800' : 'bg-blue-100 text-blue-800';
 
     tbody.insertAdjacentHTML('beforeend', `<tr class="hover:bg-slate-50 align-top">
       <td class="py-3 px-3 text-center">
@@ -1676,7 +1530,7 @@ function renderIssuesTable() {
       </td>
       <td class="py-3 px-3 whitespace-nowrap"><span class="inline-block px-2.5 py-1 rounded-lg text-[10px] font-extrabold ${areaBadgeColor}">${escapeHtml(it.areaCategory)}</span></td>
       <td class="py-3 px-3 font-bold text-slate-800">${escapeHtml(it.subAreaUnit)}</td>
-      <td class="py-3 px-3 font-medium text-slate-700 whitespace-pre-line">${escapeHtml(it.itemChecklist)}</td>
+      <td class="py-3 px-3 font-medium text-slate-700">${escapeHtml(it.itemChecklist)}</td>
       <td class="py-3 px-3 text-red-700 font-semibold whitespace-pre-line leading-relaxed min-w-[260px]">${escapeHtml(it.notes)}</td>
       <td class="py-3 px-3 text-center whitespace-nowrap">
         <button type="button" onclick="toggleIssueResolvedStatus('${escapeHtml(it.issueId)}', '${isResolved ? 'Open' : 'Resolved'}')" class="px-3 py-1 rounded-lg text-[10px] font-extrabold border transition ${isResolved ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-red-100 text-red-800 border-red-300'}">
