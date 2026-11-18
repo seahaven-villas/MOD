@@ -128,10 +128,21 @@
     <button id="btnInstallApp">Install</button>
   </div>
 
+  <!-- BAGIAN SCRIPT YANG DIPERBARUI -->
   <script>
     const GAS_WEB_APP_URL = "https://script.google.com/a/macros/kamuelavillas.com/s/AKfycbxFo10yIJk6PW5jKQrPCG0317F-2wvkP_f48RKYG5kuTpXorQWOI0Ypdi_o6yLzxq7vJg/exec";
 
-    document.getElementById('appFrame').src = GAS_WEB_APP_URL;
+    // Deteksi perangkat iPhone / iPad (iOS)
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+    if (isIOS) {
+      // Di iPhone, buka langsung URL Apps Script agar tidak diblokir aturan iframe Safari
+      window.location.replace(GAS_WEB_APP_URL);
+    } else {
+      // Di Android & Laptop, muat di dalam iframe PWA layar penuh
+      document.getElementById('appFrame').src = GAS_WEB_APP_URL;
+    }
 
     // Registrasi Service Worker PWA (tanpa cache)
     if ('serviceWorker' in navigator) {
@@ -140,7 +151,7 @@
       });
     }
 
-    // Tangkap Prompt Install Browser
+    // Tangkap Prompt Install Browser (Android & Desktop)
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
