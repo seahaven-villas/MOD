@@ -1,6 +1,6 @@
 {
-  "name": "MOD Checklist Seahaven",
-  "short_name": "MOD Seahaven",
+  "name": "Seahaven Operational System",
+  "short_name": "Seahaven Portal",
   "description": "Manager On Duty Daily Report & Issue Tracker - Seahaven Villas by Kamuela",
   "start_url": "/MOD/",
   "scope": "/MOD/",
